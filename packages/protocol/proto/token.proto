@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package juicetokens;
+
+message Token {
+  string id = 1;
+  string name = 2;
+  string symbol = 3;
+  uint64 total_supply = 4;
+  string owner = 5;
+  repeated string holders = 6;
+}
+
+message TokenTransfer {
+  string token_id = 1;
+  string from = 2;
+  string to = 3;
+  uint64 amount = 4;
+  uint64 timestamp = 5;
+}
+
+service TokenService {
+  rpc GetToken(GetTokenRequest) returns (Token);
+  rpc TransferToken(TransferTokenRequest) returns (TokenTransfer);
+}
+
+message GetTokenRequest {
+  string token_id = 1;
+}
+
+message TransferTokenRequest {
+  string token_id = 1;
+  string to = 2;
+  uint64 amount = 3;
+} 
