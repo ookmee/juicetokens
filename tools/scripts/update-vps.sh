@@ -14,22 +14,15 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# Stash any local changes
-log "Stashing any local changes..."
-git stash || true
+# Force reset any local changes
+log "Resetting any local changes..."
+git reset --hard HEAD
+git clean -fd
 
 # Pull latest changes
 log "Pulling latest changes from main branch..."
-git pull origin main
-
-# If there were stashed changes, try to apply them
-if git stash list | grep -q "stash@{0}"; then
-    log "Applying stashed changes..."
-    git stash pop || {
-        log "Warning: Could not apply stashed changes. They are saved in the stash."
-        log "You can view them with: git stash show -p"
-    }
-fi
+git fetch origin main
+git reset --hard origin/main
 
 # Make scripts executable
 log "Making scripts executable..."
