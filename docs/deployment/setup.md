@@ -31,7 +31,7 @@
 
 3. **Build and Start Services**:
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d --build
+   docker-compose -f docker/production/docker-compose.prod.yml up -d --build
    ```
 
 ## Container Management
@@ -91,7 +91,7 @@
    # Pull latest changes
    git pull origin main
    # Rebuild and restart
-   docker-compose -f docker-compose.prod.yml up -d --build
+   docker-compose -f docker/production/docker-compose.prod.yml up -d --build
    ```
 
 2. **Log Rotation**:
@@ -101,4 +101,40 @@
 3. **Resource Monitoring**:
    - Grafana dashboards
    - Alert notifications
-   - Resource usage tracking 
+   - Resource usage tracking
+
+## Management Scripts
+
+The repository includes several scripts to help manage the deployment:
+
+### Initial Setup
+```bash
+# On the VPS
+./tools/scripts/setup-vps.sh
+```
+
+### Transition to New Structure
+If you're updating from an older version:
+```bash
+# On the VPS
+./tools/scripts/transition-docker.sh
+```
+
+### Reset Environment
+To completely reset and rebuild the environment:
+```bash
+# On the VPS
+./tools/scripts/reset.sh
+```
+
+### Script Locations
+- `tools/scripts/setup-vps.sh` - Initial VPS setup
+- `tools/scripts/transition-docker.sh` - Update to new Docker structure
+- `tools/scripts/reset.sh` - Reset and rebuild environment
+
+### Script Features
+- Automatic backup of existing files
+- Proper error handling
+- Detailed logging
+- Container status checking
+- System cleanup 

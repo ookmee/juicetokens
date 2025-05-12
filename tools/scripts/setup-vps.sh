@@ -1,21 +1,23 @@
 #!/bin/bash
 
-# Create app directory
+# Create necessary directories
 mkdir -p /opt/juicetokens
+mkdir -p /opt/juicetokens/docker/{development,production,monitoring}
 
-# Copy docker-compose file
-cp docker-compose.prod.yml /opt/juicetokens/docker-compose.yml
+# Copy Docker configuration files
+cp docker/production/docker-compose.prod.yml /opt/juicetokens/docker/production/
+cp docker/development/Dockerfile /opt/juicetokens/docker/development/
+cp docker/monitoring/prometheus.yml /opt/juicetokens/docker/monitoring/
+cp docker/monitoring/alert.rules /opt/juicetokens/docker/monitoring/
 
-# Copy prometheus config
-cp prometheus.yml /opt/juicetokens/
+# Set up environment
+cp .env.example /opt/juicetokens/.env
 
-# Set up environment variables
-cat > /opt/juicetokens/.env << EOL
-GRAFANA_PASSWORD=your_secure_password_here
-EOL
+# Set permissions
+chown -R $USER:$USER /opt/juicetokens
+chmod -R 755 /opt/juicetokens
 
-# Set proper permissions
-chmod 600 /opt/juicetokens/.env
+echo "VPS setup completed. Please edit /opt/juicetokens/.env with your configuration."
 
 # Install Docker if not present
 if ! command -v docker &> /dev/null; then
