@@ -78,13 +78,13 @@ validate_compose_file() {
     if [ ! -f "$compose_file" ]; then
         log "Error: Docker compose file not found: $compose_file"
         return 1
-    }
+    fi
     
     # Validate the compose file
     if ! docker-compose -f "$compose_file" config &> /dev/null; then
         log "Error: Invalid Docker compose file: $compose_file"
         return 1
-    }
+    fi
     
     return 0
 }
