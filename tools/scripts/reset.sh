@@ -3,16 +3,31 @@
 # Exit on error
 set -e
 
+# Source validation functions
+source "$(dirname "$0")/validate.sh"
+
+# Get the current user's home directory
+DEPLOY_DIR="$HOME/juicetokens"
+
+# Validate we're not running as root
+check_root || exit 1
+
+# Validate we're in the correct directory
+validate_current_dir "$DEPLOY_DIR" || exit 1
+
+# Validate Docker installation
+validate_docker || exit 1
+
+# Validate environment variables
+validate_env
+
+# Validate Docker compose file
+validate_compose_file "docker/production/docker-compose.prod.yml" || exit 1
+
 # Function to log messages
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
 }
-
-# Check if we're in the juicetokens directory
-if [ ! -f "package.json" ]; then
-    log "Error: This script must be run from the juicetokens root directory"
-    exit 1
-fi
 
 # Check for required environment variables
 if [ -z "$GRAFANA_PASSWORD" ]; then

@@ -3,6 +3,9 @@
 # Exit on error
 set -e
 
+# Source validation functions
+source "$(dirname "$0")/validate.sh"
+
 # Function to log messages
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
@@ -10,6 +13,23 @@ log() {
 
 # Get the current user's home directory
 DEPLOY_DIR="$HOME/juicetokens"
+
+# Validate we're not running as root
+check_root || exit 1
+
+# Validate Docker installation
+validate_docker || {
+    log "Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+}
+
+# Validate Docker Compose installation
+if ! command -v docker-compose &> /dev/null; then
+    log "Installing Docker Compose..."
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+}
 
 # Create necessary directories
 log "Creating directory structure in $DEPLOY_DIR..."
@@ -32,21 +52,22 @@ log "Setting permissions..."
 chown -R $USER:$USER "$DEPLOY_DIR"
 chmod -R 755 "$DEPLOY_DIR"
 
+# Validate the deployment directory
+validate_deploy_dir "$DEPLOY_DIR" || {
+    log "Error: Failed to validate deployment directory"
+    exit 1
+}
+
+# Validate environment variables
+validate_env
+
+# Validate Docker compose file
+validate_compose_file "$DEPLOY_DIR/docker/production/docker-compose.prod.yml" || {
+    log "Error: Failed to validate Docker compose file"
+    exit 1
+}
+
 log "VPS setup completed. Please edit $DEPLOY_DIR/.env with your configuration."
-
-# Install Docker if not present
-if ! command -v docker &> /dev/null; then
-    log "Installing Docker..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-fi
-
-# Install Docker Compose if not present
-if ! command -v docker-compose &> /dev/null; then
-    log "Installing Docker Compose..."
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-fi
 
 # Start the services
 log "Starting services..."
