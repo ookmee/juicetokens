@@ -2,140 +2,87 @@
 
 This directory contains scripts for managing the JuiceTokens deployment on the VPS.
 
-## Deployment Location
+## Available Scripts
 
-All scripts assume the application is deployed in the user's home directory:
+### update-vps.sh
+The main script for updating the deployment. It:
+- Creates a backup of current state
+- Stops and cleans up all containers
+- Pulls latest changes from the repository
+- Rebuilds and restarts containers
+- Provides status updates throughout the process
+
+Usage:
 ```bash
-$HOME/juicetokens/
+./tools/scripts/update-vps.sh
 ```
 
-## Scripts Overview
+### transition-docker.sh
+Helps transition Docker configuration to the new directory structure. It:
+- Creates the new directory structure
+- Moves Docker configuration files to their new locations
+- Creates backups of all moved files
+- Updates container configuration
 
-### 1. `setup-vps.sh`
-Initial server setup script. Run this only once when setting up a new VPS.
-
+Usage:
 ```bash
-# Usage
-./setup-vps.sh
-
-# What it does:
-- Creates directory structure in $HOME/juicetokens
-- Copies Docker configuration files
-- Sets up environment variables
-- Installs Docker and Docker Compose
-- Sets proper permissions
-```
-
-### 2. `transition-docker.sh`
-Migrates from old Docker file structure to new one. Run this when updating from an older version.
-
-```bash
-# Usage
-./transition-docker.sh
-
-# What it does:
-- Creates new directory structure
-- Backs up existing Docker files
-- Moves files to new locations
-- Stops existing containers
-- Cleans up old containers/images
-- Starts containers with new config
-```
-
-### 3. `reset.sh`
-Complete reset and rebuild of the Docker environment. Run this when you need a fresh start.
-
-```bash
-# Usage
-./reset.sh
-
-# What it does:
-- Stops all containers
-- Force removes remaining containers
-- Cleans up Docker system
-- Removes all images
-- Rebuilds and starts containers
-- Checks container status
-```
-
-### 4. `update-vps.sh`
-One-command update of the entire deployment. This is the main script you'll use regularly.
-
-```bash
-# Usage
-./update-vps.sh
-
-# What it does:
-- Force resets local changes
-- Removes untracked files
-- Pulls latest changes from main
-- Makes scripts executable
-- Runs transition script if needed
-- Runs reset script
+./tools/scripts/transition-docker.sh
 ```
 
 ## Typical Workflow
 
-1. **First-time Setup**:
+1. Initial Setup:
    ```bash
-   ./setup-vps.sh
+   # Clone the repository
+   git clone https://github.com/ookmee/juicetokens.git
+   cd juicetokens
+   
+   # Make scripts executable
+   chmod +x tools/scripts/*.sh
    ```
 
-2. **Regular Updates**:
+2. Regular Updates:
    ```bash
-   ./update-vps.sh
+   # Pull and apply updates
+   ./tools/scripts/update-vps.sh
    ```
 
-## Environment Variables
+## Backup and Recovery
 
-The scripts expect certain environment variables to be set:
-
-- `GRAFANA_PASSWORD`: Password for Grafana admin user
-  - Default: 'admin' if not set
-  - Set it in your environment or .env file
-
-## Error Handling
-
-All scripts include:
-- Proper error logging
-- Timestamped messages
-- Directory validation
-- Error state recovery
-
-## Backup and Safety
-
-- `transition-docker.sh` creates backups before moving files
-- Backups are stored in `docker_backup_YYYYMMDD_HHMMSS/`
-- You can restore from backup if needed
-
-## Logging
-
-All scripts output detailed logs with timestamps:
-```bash
-[2024-05-12 20:13:28] Starting operation...
-[2024-05-12 20:13:29] Operation completed
-```
+- Each update creates a backup in a timestamped directory
+- Backups include:
+  - Docker compose configuration
+  - Environment files
+- To restore from backup:
+  ```bash
+  # Copy files from backup directory
+  cp backup_YYYYMMDD_HHMMSS/* .
+  # Rebuild containers
+  docker-compose -f docker/production/docker-compose.prod.yml up -d --build
+  ```
 
 ## Troubleshooting
 
 If you encounter issues:
 
-1. Check the logs:
-   ```bash
-   docker-compose -f docker/production/docker-compose.prod.yml logs -f
-   ```
-
-2. Verify environment variables:
-   ```bash
-   echo $GRAFANA_PASSWORD
-   ```
-
-3. Check container status:
+1. Check container status:
    ```bash
    docker-compose -f docker/production/docker-compose.prod.yml ps
    ```
 
-4. If needed, run reset:
+2. View container logs:
    ```bash
-   ./reset.sh
+   docker-compose -f docker/production/docker-compose.prod.yml logs -f
+   ```
+
+3. Force cleanup and rebuild:
+   ```bash
+   # Stop all containers
+   docker-compose -f docker/production/docker-compose.prod.yml down
+   # Remove all containers
+   docker rm -f $(docker ps -aq)
+   # Clean up system
+   docker system prune -f
+   # Rebuild and start
+   docker-compose -f docker/production/docker-compose.prod.yml up -d --build
    ``` 
