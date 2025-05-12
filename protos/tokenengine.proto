@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package tokenengine;
+
+// Core token structure
+message EncryptedToken {
+  string id = 1;
+  bytes encrypted_payload = 2;
+  string status = 3;  // READY, SPENT, LOCKED
+  uint64 timestamp = 4;
+  TokenMetadata metadata = 5;
+}
+
+message TokenMetadata {
+  string version = 1;
+  string type = 2;
+  map<string, string> attributes = 3;
+}
+
+// Storage-specific structures
+message WalletToken {
+  EncryptedToken token = 1;
+  bool offline_ready = 2;
+  uint32 priority = 3;
+  uint64 last_accessed = 4;
+}
+
+message SafeToken {
+  EncryptedToken token = 1;
+  string location = 2;  // SERVER, LOCAL, IPFS
+  bytes recovery_hint = 3;
+  uint64 backup_timestamp = 4;
+  repeated string backup_locations = 5;
+}
+
+// Transaction structures
+message TransactionRequest {
+  string id = 1;
+  string sender = 2;
+  string receiver = 3;
+  repeated EncryptedToken tokens = 4;
+  uint64 expiry = 5;
+  map<string, string> metadata = 6;
+}
+
+message TransactionResponse {
+  string id = 1;
+  string status = 2;  // PENDING, COMPLETED, FAILED
+  string error_message = 3;
+  uint64 timestamp = 4;
+}
+
+message TransactionConfirmation {
+  string transaction_id = 1;
+  string status = 2;
+  bytes signature = 3;
+  uint64 timestamp = 4;
+}
+
+message TransactionResult {
+  string transaction_id = 1;
+  string status = 2;
+  string error_message = 3;
+  uint64 timestamp = 4;
+}
+
+// Storage service
+service TokenStorage {
+  // Wallet operations
+  rpc AddToWallet(AddToWalletRequest) returns (StorageResponse);
+  rpc RemoveFromWallet(RemoveFromWalletRequest) returns (StorageResponse);
+  rpc GetWalletTokens(GetWalletTokensRequest) returns (GetWalletTokensResponse);
+  
+  // Safe operations
+  rpc BackupToSafe(BackupToSafeRequest) returns (StorageResponse);
+  rpc RestoreFromSafe(RestoreFromSafeRequest) returns (StorageResponse);
+  rpc GetSafeTokens(GetSafeTokensRequest) returns (GetSafeTokensResponse);
+  
+  // Sync operations
+  rpc SyncWallet(SyncRequest) returns (SyncResponse);
+}
+
+// Storage request/response messages
+message AddToWalletRequest {
+  repeated WalletToken tokens = 1;
+}
+
+message RemoveFromWalletRequest {
+  repeated string token_ids = 1;
+}
+
+message GetWalletTokensRequest {
+  string status = 1;
+  bool offline_only = 2;
+}
+
+message GetWalletTokensResponse {
+  repeated WalletToken tokens = 1;
+}
+
+message BackupToSafeRequest {
+  repeated string token_ids = 1;
+  string location = 2;
+}
+
+message RestoreFromSafeRequest {
+  repeated string token_ids = 1;
+  string location = 2;
+}
+
+message GetSafeTokensRequest {
+  string location = 1;
+}
+
+message GetSafeTokensResponse {
+  repeated SafeToken tokens = 1;
+}
+
+message SyncRequest {
+  string last_sync_timestamp = 1;
+}
+
+message SyncResponse {
+  repeated WalletToken updated_tokens = 1;
+  repeated string removed_token_ids = 2;
+  string sync_timestamp = 3;
+}
+
+message StorageResponse {
+  bool success = 1;
+  string error_message = 2;
+  uint64 timestamp = 3;
+} 

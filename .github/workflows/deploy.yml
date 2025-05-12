@@ -22,4 +22,7 @@ jobs:
             cd ~/juicetokens
             docker-compose -f docker-compose.prod.yml pull
             docker-compose -f docker-compose.prod.yml up -d
-            docker system prune -f 
+            docker system prune -f
+            npm install
+            npm run proto
+            npm run build 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Engine Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Token Engine Test Interface</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Safe Storage</h2>
+            <button onclick="createSafeToken()">Create Safe Token</button>
+            <button onclick="getSafeTokens()">Get Safe Tokens</button>
+            <h3>Response:</h3>
+            <pre id="safeResponse"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function createSafeToken() {
+            const token = {
+                token: {
+                    id: 'safe-token-' + Date.now(),
+                    encrypted_payload: btoa('safe-payload'),
+                    status: 'READY',
+                    timestamp: Date.now(),
+                    metadata: {
+                        version: '1.0',
+                        type: 'SAFE',
+                        attributes: {
+                            safe: 'true'
+                        }
+                    }
+                },
+                location: 'SERVER',
+                recovery_hint: btoa('recovery-hint'),
+                backup_timestamp: Date.now(),
+                backup_locations: ['SERVER']
+            };
+
+            try {
+                const response = await fetch('/api/tokens/safe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(token)
+                });
+                const result = await response.json();
+                document.getElementById('safeResponse').textContent = 
+                    JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('safeResponse').textContent = 
+                    'Error: ' + error.message;
+            }
+        }
+
+        async function getSafeTokens() {
+            try {
+                const response = await fetch('/api/tokens/safe');
+                const tokens = await response.json();
+                document.getElementById('safeResponse').textContent = 
+                    JSON.stringify(tokens, null, 2);
+            } catch (error) {
+                document.getElementById('safeResponse').textContent = 
+                    'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 
