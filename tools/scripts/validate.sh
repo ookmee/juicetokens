@@ -13,19 +13,19 @@ validate_deploy_dir() {
     if [ ! -d "$dir" ]; then
         log "Error: Deployment directory $dir does not exist"
         return 1
-    }
+    fi
     
     # Check if directory is writable
     if [ ! -w "$dir" ]; then
         log "Error: Deployment directory $dir is not writable"
         return 1
-    }
+    fi
     
     # Check if we're in the juicetokens directory
     if [ ! -f "$dir/package.json" ]; then
         log "Error: Not a valid juicetokens directory (package.json not found)"
         return 1
-    }
+    fi
     
     return 0
 }
@@ -35,18 +35,18 @@ validate_docker() {
     if ! command -v docker &> /dev/null; then
         log "Error: Docker is not installed"
         return 1
-    }
+    fi
     
     if ! command -v docker-compose &> /dev/null; then
         log "Error: Docker Compose is not installed"
         return 1
-    }
+    fi
     
     # Check if Docker daemon is running
     if ! docker info &> /dev/null; then
         log "Error: Docker daemon is not running"
         return 1
-    }
+    fi
     
     return 0
 }

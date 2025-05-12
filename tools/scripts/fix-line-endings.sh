@@ -10,12 +10,27 @@ fix_file() {
     local file="$1"
     log "Fixing $file..."
     
+    # Create a backup
+    cp "$file" "${file}.bak"
+    
     # Convert to Unix line endings and remove any hidden characters
     tr -d '\r' < "$file" > "${file}.tmp"
+    
+    # Remove any BOM and other special characters
+    sed -i '1s/^\xEF\xBB\xBF//' "${file}.tmp"
+    sed -i 's/[^[:print:]\t\n]//g' "${file}.tmp"
+    
+    # Fix common syntax issues
+    sed -i 's/}/fi/g' "${file}.tmp"
+    sed -i 's/{/then/g' "${file}.tmp"
+    
+    # Move the fixed file back
     mv "${file}.tmp" "$file"
     
     # Make sure the file is executable
     chmod +x "$file"
+    
+    log "Created backup at ${file}.bak"
 }
 
 # Fix all shell scripts in the tools/scripts directory
@@ -26,4 +41,5 @@ for script in tools/scripts/*.sh; do
     fi
 done
 
-log "All scripts have been fixed!" 
+log "All scripts have been fixed!"
+log "If you encounter any issues, you can restore from the .bak files" 
