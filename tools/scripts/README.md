@@ -2,6 +2,13 @@
 
 This directory contains scripts for managing the JuiceTokens deployment on the VPS.
 
+## Deployment Location
+
+All scripts assume the application is deployed in the user's home directory:
+```bash
+$HOME/juicetokens/
+```
+
 ## Scripts Overview
 
 ### 1. `setup-vps.sh`
@@ -12,7 +19,7 @@ Initial server setup script. Run this only once when setting up a new VPS.
 ./setup-vps.sh
 
 # What it does:
-- Creates directory structure in /opt/juicetokens
+- Creates directory structure in $HOME/juicetokens
 - Copies Docker configuration files
 - Sets up environment variables
 - Installs Docker and Docker Compose
