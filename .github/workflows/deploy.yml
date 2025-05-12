@@ -20,8 +20,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ~/juicetokens
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
+            docker-compose -f docker/production/docker-compose.prod.yml pull
+            docker-compose -f docker/production/docker-compose.prod.yml up -d
             docker system prune -f
             npm install
             npm run proto
