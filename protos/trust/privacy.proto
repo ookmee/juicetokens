@@ -1,0 +1,300 @@
+syntax = "proto3";
+
+package juicetokens.trust.privacy;
+
+import "trust/identity.proto";  // For identity references
+
+// Privacy Controls and Consent Management
+message PrivacyPreferences {
+  string identity_id = 1;  // Identity these preferences belong to
+  map<string, AttributeVisibility> attribute_visibility = 2;  // Visibility by attribute
+  map<string, SharingPreference> sharing_preferences = 3;  // Sharing by purpose
+  repeated ConsentRecord active_consents = 4;  // Active consent records
+  uint64 last_updated_ms = 5;  // Last update timestamp
+  bytes signature = 6;  // Signature by identity holder
+}
+
+enum VisibilityLevel {
+  PUBLIC = 0;            // Visible to anyone
+  NETWORK = 1;           // Visible to network participants
+  CONNECTIONS = 2;       // Visible to connections
+  TRUSTED = 3;           // Visible only to trusted connections
+  PRIVATE = 4;           // Not shared automatically
+}
+
+message AttributeVisibility {
+  string attribute_name = 1;  // Attribute name
+  VisibilityLevel visibility_level = 2;  // Visibility level
+  repeated string allowed_viewers = 3;  // Explicitly allowed viewers
+  repeated string blocked_viewers = 4;  // Explicitly blocked viewers
+  bool require_explicit_consent = 5;  // Whether explicit consent is required
+}
+
+message SharingPreference {
+  string purpose = 1;  // Purpose of data sharing
+  enum SharingLevel {
+    ALWAYS_SHARE = 0;     // Always share for this purpose
+    ASK_EVERY_TIME = 1;   // Ask for consent every time
+    SHARE_ONCE = 2;       // Share once, then ask again
+    NEVER_SHARE = 3;      // Never share for this purpose
+  }
+  SharingLevel sharing_level = 2;
+  uint64 consent_duration_seconds = 3;  // How long consent is valid
+  bool allow_delegation = 4;  // Whether the data can be delegated to others
+  bytes extra_requirements = 5;  // Additional requirements (serialized)
+}
+
+// Consent management
+message ConsentRequest {
+  string request_id = 1;  // Request identifier
+  string requester_id = 2;  // Requester identity
+  string subject_id = 3;  // Subject identity
+  string purpose = 4;  // Purpose of the request
+  repeated string requested_attributes = 5;  // Attributes requested
+  uint64 request_timestamp_ms = 6;  // Request timestamp
+  uint64 consent_duration_seconds = 7;  // Requested consent duration
+  string data_usage_policy = 8;  // Data usage policy
+  bool allow_delegation = 9;  // Whether delegation is requested
+  bytes request_signature = 10;  // Requester's signature
+}
+
+message ConsentResponse {
+  string request_id = 1;  // Reference to request
+  string subject_id = 2;  // Subject identity
+  enum ConsentDecision {
+    GRANTED = 0;      // Consent granted
+    DENIED = 1;       // Consent denied
+    PARTIAL = 2;      // Partial consent granted
+    DEFERRED = 3;     // Decision deferred
+  }
+  ConsentDecision decision = 3;
+  repeated string granted_attributes = 4;  // Attributes for which consent was granted
+  uint64 response_timestamp_ms = 5;  // Response timestamp
+  uint64 expiry_timestamp_ms = 6;  // When consent expires
+  string comment = 7;  // Optional comment
+  bytes response_signature = 8;  // Subject's signature
+}
+
+message ConsentRecord {
+  string consent_id = 1;  // Consent identifier
+  string request_id = 2;  // Reference to request
+  string requester_id = 3;  // Requester identity
+  string subject_id = 4;  // Subject identity
+  string purpose = 5;  // Purpose of consent
+  repeated string granted_attributes = 6;  // Attributes granted
+  uint64 grant_timestamp_ms = 7;  // When consent was granted
+  uint64 expiry_timestamp_ms = 8;  // When consent expires
+  bytes subject_signature = 9;  // Subject's signature
+  bytes requester_acknowledgment = 10;  // Requester's acknowledgment
+  bool revocable = 11;  // Whether consent can be revoked
+  ConsentStatus status = 12;  // Current status
+}
+
+enum ConsentStatus {
+  ACTIVE = 0;      // Consent is active
+  EXPIRED = 1;     // Consent has expired
+  REVOKED = 2;     // Consent was revoked
+  SUPERSEDED = 3;  // Consent was superseded by newer consent
+}
+
+message ConsentRevocation {
+  string consent_id = 1;  // Consent identifier
+  string subject_id = 2;  // Subject identity
+  string reason = 3;  // Reason for revocation
+  uint64 revocation_timestamp_ms = 4;  // Revocation timestamp
+  bytes revocation_signature = 5;  // Subject's signature
+  bool delete_shared_data = 6;  // Whether to delete already shared data
+}
+
+// Data minimization
+message DataMinimizationRule {
+  string rule_id = 1;  // Rule identifier
+  string attribute_name = 2;  // Attribute to minimize
+  enum MinimizationTechnique {
+    NONE = 0;              // No minimization
+    GENERALIZATION = 1;    // Generalize the data
+    SUPPRESSION = 2;       // Suppress parts of the data
+    ANONYMIZATION = 3;     // Anonymize the data
+    PSEUDONYMIZATION = 4;  // Pseudonymize the data
+    DIFFERENTIAL_PRIVACY = 5;  // Apply differential privacy
+  }
+  MinimizationTechnique technique = 3;
+  bytes technique_parameters = 4;  // Technique-specific parameters
+  string purpose = 5;  // Purpose this rule applies to
+}
+
+message MinimizedAttribute {
+  string original_attribute_name = 1;  // Original attribute name
+  string minimized_value = 2;  // Minimized value
+  DataMinimizationRule applied_rule = 3;  // Rule that was applied
+  string purpose = 4;  // Purpose of minimization
+  uint64 minimization_timestamp_ms = 5;  // When minimization occurred
+}
+
+// Data deletion
+message DeletionRequest {
+  string request_id = 1;  // Request identifier
+  string subject_id = 2;  // Subject identity
+  string processor_id = 3;  // Data processor identity
+  repeated string attributes_to_delete = 4;  // Attributes to delete
+  string reason = 5;  // Reason for deletion
+  uint64 request_timestamp_ms = 6;  // Request timestamp
+  bytes request_signature = 7;  // Subject's signature
+}
+
+message DeletionConfirmation {
+  string request_id = 1;  // Reference to request
+  string processor_id = 2;  // Data processor identity
+  bool deletion_completed = 3;  // Whether deletion was completed
+  repeated string deleted_attributes = 4;  // Attributes deleted
+  repeated string undeleted_attributes = 5;  // Attributes not deleted
+  string reason_for_incomplete = 6;  // Reason if incomplete
+  uint64 confirmation_timestamp_ms = 7;  // Confirmation timestamp
+  bytes confirmation_signature = 8;  // Processor's signature
+}
+
+// DHT integration
+message PrivacyDHTEntry {
+  string entry_id = 1;  // Entry identifier
+  enum EntryType {
+    ENCRYPTED_CONSENT = 0;    // Encrypted consent record
+    PROOF_OF_DELETION = 1;    // Proof of data deletion
+    PRIVACY_PREFERENCE = 2;   // Privacy preference
+    REVOCATION_RECORD = 3;    // Revocation record
+  }
+  EntryType entry_type = 2;
+  bytes encrypted_data = 3;  // Encrypted entry data
+  string subject_id = 4;  // Subject identity
+  uint64 timestamp_ms = 5;  // Entry timestamp
+  bytes signature = 6;  // Signature by subject
+  string dht_entry_type = 7;  // Fixed to "privacy" for DHT entry_type field
+}
+
+// Personal chain integration
+message PrivacyChainEntry {
+  string subject_id = 1;  // Subject identity
+  enum PrivacyEventType {
+    CONSENT_GIVEN = 0;       // Consent was given
+    CONSENT_RECEIVED = 1;    // Consent was received
+    CONSENT_REVOKED = 2;     // Consent was revoked
+    PRIVACY_UPDATED = 3;     // Privacy preferences updated
+    DATA_DELETED = 4;        // Data was deleted
+    ACCESS_GRANTED = 5;      // Access was granted
+    ACCESS_REVOKED = 6;      // Access was revoked
+  }
+  PrivacyEventType event_type = 2;
+  string reference_id = 3;  // ID of referenced object (consent, etc.)
+  string counterparty_id = 4;  // ID of other party (if applicable)
+  uint64 sequence_number = 5;  // Sequence number in personal chain
+  uint64 timestamp_ms = 6;  // Event timestamp
+  string entry_type = 7;  // Fixed to "privacy"
+  bytes dht_key = 8;  // DHT key where full record is stored
+  bytes entry_hash = 9;  // Hash of the entry for verification
+}
+
+// Access control
+message AccessPolicy {
+  string policy_id = 1;  // Policy identifier
+  string attribute_name = 2;  // Target attribute
+  repeated AccessRule rules = 3;  // Access rules
+  bool default_deny = 4;  // Whether to deny by default
+  string subject_id = 5;  // Subject identity
+  uint64 last_updated_ms = 6;  // Last update timestamp
+  bytes policy_signature = 7;  // Subject's signature
+}
+
+message AccessRule {
+  string rule_id = 1;  // Rule identifier
+  enum Effect {
+    ALLOW = 0;  // Allow access
+    DENY = 1;   // Deny access
+  }
+  Effect effect = 2;
+  repeated Condition conditions = 3;  // Conditions for the rule
+  uint32 priority = 4;  // Rule priority (lower is higher)
+}
+
+message Condition {
+  string condition_id = 1;  // Condition identifier
+  enum ConditionType {
+    IDENTITY = 0;      // Based on identity
+    GROUP = 1;         // Based on group membership
+    TIME = 2;          // Based on time
+    LOCATION = 3;      // Based on location
+    PURPOSE = 4;       // Based on purpose
+    ATTRIBUTE = 5;     // Based on another attribute
+    CONJUNCTION = 6;   // Logical AND of conditions
+    DISJUNCTION = 7;   // Logical OR of conditions
+  }
+  ConditionType condition_type = 2;
+  bytes condition_parameters = 3;  // Condition-specific parameters
+}
+
+message AccessRequest {
+  string request_id = 1;  // Request identifier
+  string requester_id = 2;  // Requester identity
+  string subject_id = 3;  // Subject identity
+  repeated string requested_attributes = 4;  // Attributes requested
+  string purpose = 5;  // Purpose of the request
+  string context = 6;  // Context information
+  uint64 request_timestamp_ms = 7;  // Request timestamp
+  bytes request_signature = 8;  // Requester's signature
+}
+
+message AccessResponse {
+  string request_id = 1;  // Reference to request
+  enum AccessDecision {
+    GRANTED = 0;  // Access granted
+    DENIED = 1;   // Access denied
+    PARTIAL = 2;  // Partial access granted
+  }
+  AccessDecision decision = 2;
+  repeated string granted_attributes = 3;  // Attributes granted
+  uint64 response_timestamp_ms = 4;  // Response timestamp
+  uint64 access_expiry_ms = 5;  // When access expires
+  bytes response_signature = 6;  // Subject's signature
+}
+
+// Encryption and key management
+message EncryptedData {
+  bytes ciphertext = 1;  // Encrypted data
+  bytes iv = 2;  // Initialization vector
+  string encryption_algorithm = 3;  // Algorithm used
+  bytes authentication_tag = 4;  // Authentication tag
+  string key_id = 5;  // Key used for encryption
+  uint64 encryption_timestamp_ms = 6;  // Encryption timestamp
+  repeated string authorized_decryptors = 7;  // Authorized decryptors
+}
+
+message KeySharingRecord {
+  string record_id = 1;  // Record identifier
+  string key_id = 2;  // Key identifier
+  string owner_id = 3;  // Key owner
+  string recipient_id = 4;  // Key recipient
+  bytes encrypted_key = 5;  // Encrypted key
+  string encryption_method = 6;  // Method used to encrypt the key
+  uint64 sharing_timestamp_ms = 7;  // Sharing timestamp
+  uint64 access_expiry_ms = 8;  // When access expires
+  bytes sharing_signature = 9;  // Owner's signature
+}
+
+// Audit and logging
+message PrivacyEventLog {
+  string log_id = 1;  // Log identifier
+  string subject_id = 2;  // Subject identity
+  enum EventType {
+    CONSENT_CHANGE = 0;    // Consent changed
+    ACCESS_ATTEMPT = 1;    // Access was attempted
+    DATA_TRANSFER = 2;     // Data was transferred
+    POLICY_CHANGE = 3;     // Policy was changed
+    KEY_ROTATION = 4;      // Key was rotated
+    DELETION = 5;          // Data was deleted
+  }
+  EventType event_type = 3;
+  string event_description = 4;  // Description of the event
+  string actor_id = 5;  // Identity performing the action
+  uint64 event_timestamp_ms = 6;  // Event timestamp
+  string reference_id = 7;  // ID of referenced object
+  bytes evidence = 8;  // Evidence of the event
+  map<string, string> event_metadata = 9;  // Additional metadata
+} 

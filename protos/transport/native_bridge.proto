@@ -1,0 +1,190 @@
+syntax = "proto3";
+
+package juicetokens.transport.native_bridge;
+
+option go_package = "github.com/juicetokens/protos/transport/native_bridge";
+
+// Native Bridge is responsible for communication between PWA (Progressive Web App)
+// and native components of the JuiceTokens system
+
+// NativeBridgeRequest represents a request from web to native
+message NativeBridgeRequest {
+  string request_id = 1;         // Unique request identifier
+  RequestType request_type = 2;  // Type of request
+  bytes payload = 3;             // Request payload
+  uint32 timeout_ms = 4;         // Request timeout
+  bool requires_tee = 5;         // Whether TEE is required
+  string operation = 6;          // Specific operation to perform
+  uint32 priority = 7;           // Request priority
+}
+
+// RequestType represents different types of native bridge requests
+enum RequestType {
+  SECURE_STORAGE = 0;      // Access secure storage
+  CRYPTO_OPERATION = 1;    // Perform cryptographic operation
+  CONNECTIVITY = 2;        // Access connectivity features (BLE, NFC)
+  SENSOR = 3;              // Access device sensors
+  NOTIFICATION = 4;        // Manage notifications
+  SECURE_DISPLAY = 5;      // Request secure UI display
+  QR_CODE = 6;             // QR code generation/scanning
+  FILE_SYSTEM = 7;         // File system access
+}
+
+// NativeBridgeResponse represents a response from native to web
+message NativeBridgeResponse {
+  string request_id = 1;           // Matching request identifier
+  bool success = 2;                // Whether the request succeeded
+  bytes response_data = 3;         // Response data
+  string error_message = 4;        // Error message if unsuccessful
+  repeated Capability detected_capabilities = 5;  // Discovered device capabilities
+  uint64 timestamp_ms = 6;         // Response timestamp
+  uint32 error_code = 7;           // Error code if unsuccessful
+}
+
+// Capability represents a device capability
+message Capability {
+  string capability_id = 1;        // Capability identifier
+  string display_name = 2;         // Human-readable name
+  bool available = 3;              // Whether available
+  map<string, string> parameters = 4;  // Capability-specific parameters
+  uint32 version = 5;              // Capability version
+}
+
+// TEE (Trusted Execution Environment) integration
+message TeeRequest {
+  string operation = 1;            // Operation to perform
+  bytes input_data = 2;            // Input data
+  string key_identifier = 3;       // Key identifier if needed
+  bytes authentication_data = 4;   // Data for TEE authentication
+  uint32 timeout_ms = 5;           // Operation timeout
+}
+
+message TeeResponse {
+  bool success = 1;                // Whether the operation succeeded
+  bytes output_data = 2;           // Output data
+  bytes attestation = 3;           // TEE attestation
+  string error_code = 4;           // Error code if unsuccessful
+  bytes signature = 5;             // Signature (if applicable)
+}
+
+// Secure storage operations
+message SecureStorageRequest {
+  enum Operation {
+    STORE = 0;      // Store data
+    RETRIEVE = 1;   // Retrieve data
+    DELETE = 2;     // Delete data
+    LIST = 3;       // List stored items
+  }
+  Operation operation = 1;
+  string key = 2;                // Storage key
+  bytes data = 3;                // Data to store (for STORE operation)
+  bool requires_authentication = 4;  // Whether authentication is required
+  string namespace = 5;          // Storage namespace
+}
+
+message SecureStorageResponse {
+  bool success = 1;
+  bytes data = 2;                // Retrieved data (for RETRIEVE operation)
+  repeated string keys = 3;      // List of keys (for LIST operation)
+  string error_message = 4;
+}
+
+// Cryptographic operations
+message CryptoRequest {
+  enum Operation {
+    GENERATE_KEY = 0;    // Generate a new key
+    SIGN = 1;            // Sign data
+    VERIFY = 2;          // Verify signature
+    ENCRYPT = 3;         // Encrypt data
+    DECRYPT = 4;         // Decrypt data
+    DERIVE_KEY = 5;      // Derive a key
+    RANDOM = 6;          // Generate random bytes
+  }
+  Operation operation = 1;
+  string algorithm = 2;         // Cryptographic algorithm
+  bytes input_data = 3;         // Input data
+  string key_id = 4;            // Key identifier
+  bytes additional_data = 5;    // Additional data (IV, salt, etc.)
+  uint32 output_length = 6;     // Desired output length (for RANDOM)
+}
+
+message CryptoResponse {
+  bool success = 1;
+  bytes output = 2;             // Output data
+  string key_id = 3;            // Generated key ID (for GENERATE_KEY)
+  bool verification_result = 4;  // Verification result (for VERIFY)
+  string error_message = 5;
+}
+
+// Connectivity operations
+message ConnectivityRequest {
+  enum Interface {
+    BLE = 0;       // Bluetooth Low Energy
+    NFC = 1;       // Near Field Communication
+    WIFI = 2;      // WiFi
+    CELLULAR = 3;  // Cellular network
+  }
+  Interface interface = 1;
+  string operation = 2;          // Operation to perform
+  bytes parameters = 3;          // Operation parameters
+  uint32 timeout_ms = 4;         // Operation timeout
+}
+
+message ConnectivityResponse {
+  bool success = 1;
+  bytes response_data = 2;       // Response data
+  string error_message = 3;
+  map<string, string> metadata = 4;  // Response metadata
+}
+
+// QR code operations
+message QrCodeRequest {
+  enum Operation {
+    GENERATE = 0;    // Generate a QR code
+    SCAN = 1;        // Scan a QR code
+  }
+  Operation operation = 1;
+  string data = 2;                // Data to encode (for GENERATE)
+  uint32 size = 3;                // QR code size (for GENERATE)
+  string error_correction = 4;    // Error correction level (for GENERATE)
+  bool continuous_scan = 5;       // Continuous scanning (for SCAN)
+}
+
+message QrCodeResponse {
+  bool success = 1;
+  bytes qr_image = 2;             // Generated QR code image (for GENERATE)
+  string scanned_data = 3;        // Scanned data (for SCAN)
+  string error_message = 4;
+}
+
+// Capability discovery
+message GetCapabilitiesRequest {
+  repeated string capability_types = 1;  // Types of capabilities to discover
+  bool include_details = 2;             // Whether to include detailed information
+  bool refresh = 3;                     // Whether to refresh cached capabilities
+}
+
+message GetCapabilitiesResponse {
+  bool success = 1;
+  repeated Capability capabilities = 2;  // Discovered capabilities
+  string error_message = 3;
+  uint64 timestamp_ms = 4;              // When capabilities were discovered
+  string device_id = 5;                 // Device identifier
+  string platform = 6;                  // Platform (iOS, Android, etc.)
+  string version = 7;                   // Platform version
+}
+
+// NativeBridgeService defines the RPC methods for native bridge operations
+service NativeBridgeService {
+  // SendRequest sends a request from web to native
+  rpc SendRequest(NativeBridgeRequest) returns (NativeBridgeResponse);
+  
+  // StreamRequests establishes a bidirectional stream for requests and responses
+  rpc StreamRequests(stream NativeBridgeRequest) returns (stream NativeBridgeResponse);
+  
+  // GetCapabilities retrieves the capabilities of the native environment
+  rpc GetCapabilities(GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+  
+  // PerformTeeOperation performs an operation in the TEE
+  rpc PerformTeeOperation(TeeRequest) returns (TeeResponse);
+} 

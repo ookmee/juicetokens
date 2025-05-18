@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package juicetokens.foundation.time;
+
+// TimeSource represents a source of time information
+message TimeSource {
+  enum SourceType {
+    SYSTEM = 0;  // System clock
+    NTP = 1;  // Network Time Protocol
+    GNSS = 2;  // Global Navigation Satellite System
+    RADIO = 3;  // Radio time signals
+    CONSENSUS = 4;  // Time consensus from peers
+  }
+  SourceType source_type = 1;
+  int64 timestamp_ms = 2;  // Milliseconds since Unix epoch
+  uint32 confidence_score = 3;  // 0-100 confidence score
+}
+
+// TimeConsensus represents aggregated time from multiple sources
+message TimeConsensus {
+  repeated TimeSource sources = 1;  // All available time sources
+  int64 consensus_timestamp_ms = 2;  // Agreed-upon timestamp in milliseconds
+  uint32 consensus_confidence = 3;  // Overall confidence in the consensus (0-100)
+}
+
+// SpoofingDetectionResult represents the result of time spoofing detection
+message SpoofingDetectionResult {
+  bool spoofing_detected = 1;  // Whether time spoofing was detected
+  string detection_reason = 2;  // Reason for detection
+  int64 expected_time_range_min_ms = 3;  // Expected minimum time
+  int64 expected_time_range_max_ms = 4;  // Expected maximum time
+  int64 detected_time_ms = 5;  // Detected time
+}
+
+// TimeService defines the RPC methods for time operations
+service TimeService {
+  // GetCurrentTime retrieves the current time from available sources
+  rpc GetCurrentTime(GetCurrentTimeRequest) returns (GetCurrentTimeResponse);
+  
+  // GetTimeConsensus retrieves time consensus from multiple sources
+  rpc GetTimeConsensus(GetTimeConsensusRequest) returns (GetTimeConsensusResponse);
+  
+  // DetectTimeSpoofing checks for potential time manipulation
+  rpc DetectTimeSpoofing(DetectTimeSpoofingRequest) returns (DetectTimeSpoofingResponse);
+  
+  // StreamTimeUpdates streams time updates from available sources
+  rpc StreamTimeUpdates(StreamTimeUpdatesRequest) returns (stream TimeSource);
+}
+
+// Request/Response messages for TimeService
+message GetCurrentTimeRequest {
+  bool include_confidence = 1;  // Whether to include confidence scores
+}
+
+message GetCurrentTimeResponse {
+  TimeSource time_source = 1;
+}
+
+message GetTimeConsensusRequest {
+  uint32 min_sources = 1;  // Minimum number of sources required
+  uint32 min_confidence = 2;  // Minimum confidence score required
+}
+
+message GetTimeConsensusResponse {
+  TimeConsensus consensus = 1;
+}
+
+message DetectTimeSpoofingRequest {
+  int64 reference_time_ms = 1;  // Reference time to check against
+  uint32 max_drift_ms = 2;  // Maximum allowed time drift
+}
+
+message DetectTimeSpoofingResponse {
+  SpoofingDetectionResult result = 1;
+}
+
+message StreamTimeUpdatesRequest {
+  uint32 update_interval_ms = 1;  // Interval between updates
+} 

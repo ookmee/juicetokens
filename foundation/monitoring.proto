@@ -1,0 +1,348 @@
+syntax = "proto3";
+
+package juicetokens.foundation.monitoring;
+
+// Telemetry Structures
+message TelemetryData {
+  string instance_id = 1;  // Unique identifier for this instance
+  string version = 2;  // Software version
+  int64 timestamp_ms = 3;  // When telemetry was collected
+  string environment = 4;  // Environment (development, staging, production)
+  map<string, Metric> metrics = 5;  // Collected metrics by name
+  repeated LogEntry logs = 6;  // Recent log entries
+  repeated AlertEntry alerts = 7;  // Active alerts
+  repeated ComponentStatus components = 8;  // Component statuses
+  ResourceUsage resources = 9;  // Resource usage information
+  UserMetrics user_metrics = 10;  // User-related metrics
+  NetworkMetrics network = 11;  // Network-related metrics
+}
+
+// System Health Monitoring
+message Metric {
+  enum MetricType {
+    COUNTER = 0;  // Monotonically increasing counter
+    GAUGE = 1;    // Value that can go up and down
+    HISTOGRAM = 2;  // Distribution of values
+    SUMMARY = 3;  // Statistical summary
+  }
+  
+  string name = 1;  // Metric name
+  MetricType type = 2;  // Type of metric
+  string description = 3;  // Human-readable description
+  oneof value {
+    double double_value = 4;  // For simple values
+    HistogramData histogram = 5;  // For histograms
+    SummaryData summary = 6;  // For summaries
+  }
+  map<string, string> labels = 7;  // Metric labels/dimensions
+  string unit = 8;  // Unit of measurement
+  int64 collection_timestamp_ms = 9;  // When the metric was collected
+}
+
+message HistogramData {
+  repeated HistogramBucket buckets = 1;  // Histogram buckets
+  double sum = 2;  // Sum of all observed values
+  uint64 count = 3;  // Count of values
+}
+
+message HistogramBucket {
+  double upper_bound = 1;  // Upper bound of bucket
+  uint64 count = 2;  // Count in bucket
+}
+
+message SummaryData {
+  repeated Quantile quantiles = 1;  // Quantiles (e.g., p50, p90, p99)
+  double sum = 2;  // Sum of all observed values
+  uint64 count = 3;  // Count of values
+}
+
+message Quantile {
+  double quantile = 1;  // Quantile value (e.g., 0.5 for median)
+  double value = 2;  // Value at this quantile
+}
+
+// Component Status Tracking
+message ComponentStatus {
+  string component_id = 1;  // Component identifier
+  string name = 2;  // Human-readable name
+  enum Status {
+    UNKNOWN = 0;  // Status unknown
+    HEALTHY = 1;  // Component is healthy
+    DEGRADED = 2;  // Component is degraded but operational
+    WARNING = 3;  // Component has warnings
+    ERROR = 4;    // Component has errors
+    CRITICAL = 5;  // Component has critical issues
+    INACTIVE = 6;  // Component is inactive
+  }
+  Status status = 3;  // Current status
+  string description = 4;  // Status description
+  int64 last_updated_ms = 5;  // When status was last updated
+  string version = 6;  // Component version
+  map<string, string> metadata = 7;  // Additional metadata
+  repeated Dependency dependencies = 8;  // Dependencies
+}
+
+message Dependency {
+  string component_id = 1;  // Component identifier
+  bool critical = 2;  // Whether this is a critical dependency
+  enum Status {
+    UNKNOWN = 0;  // Status unknown
+    AVAILABLE = 1;  // Dependency is available
+    DEGRADED = 2;  // Dependency is degraded
+    UNAVAILABLE = 3;  // Dependency is unavailable
+  }
+  Status status = 3;  // Current status
+}
+
+message LogEntry {
+  int64 timestamp_ms = 1;  // Log timestamp
+  enum Level {
+    TRACE = 0;  // Trace level
+    DEBUG = 1;  // Debug level
+    INFO = 2;   // Info level
+    WARN = 3;   // Warning level
+    ERROR = 4;  // Error level
+    FATAL = 5;  // Fatal level
+  }
+  Level level = 2;  // Log level
+  string message = 3;  // Log message
+  string component = 4;  // Source component
+  map<string, string> attributes = 5;  // Log attributes
+  string trace_id = 6;  // For distributed tracing
+  string span_id = 7;  // For distributed tracing
+}
+
+message AlertEntry {
+  string alert_id = 1;  // Alert identifier
+  string name = 2;  // Alert name
+  int64 start_timestamp_ms = 3;  // When the alert started
+  int64 last_updated_ms = 4;  // When the alert was last updated
+  enum Severity {
+    INFO = 0;     // Informational
+    WARNING = 1;  // Warning
+    ERROR = 2;    // Error
+    CRITICAL = 3;  // Critical
+  }
+  Severity severity = 5;  // Alert severity
+  string description = 6;  // Alert description
+  string component = 7;  // Affected component
+  repeated string tags = 8;  // Alert tags
+  map<string, string> labels = 9;  // Alert labels
+  bool active = 10;  // Whether the alert is still active
+  repeated string affected_users = 11;  // Affected users, if any
+}
+
+// Resource Metrics
+message ResourceUsage {
+  CPUUsage cpu = 1;  // CPU usage
+  MemoryUsage memory = 2;  // Memory usage
+  DiskUsage disk = 3;  // Disk usage
+  NetworkUsage network = 4;  // Network usage
+  BatteryStatus battery = 5;  // Battery status (for mobile)
+}
+
+message CPUUsage {
+  double total_usage_percent = 1;  // Total CPU usage percentage
+  uint32 core_count = 2;  // Number of CPU cores
+  repeated double core_usage_percent = 3;  // Per-core usage percentages
+  double load_average_1m = 4;  // 1-minute load average
+  double load_average_5m = 5;  // 5-minute load average
+  double load_average_15m = 6;  // 15-minute load average
+  double user_time_percent = 7;  // User time percentage
+  double system_time_percent = 8;  // System time percentage
+  double io_wait_percent = 9;  // I/O wait percentage
+}
+
+message MemoryUsage {
+  uint64 total_bytes = 1;  // Total memory in bytes
+  uint64 used_bytes = 2;  // Used memory in bytes
+  uint64 free_bytes = 3;  // Free memory in bytes
+  uint64 buffer_bytes = 4;  // Buffer memory in bytes
+  uint64 cache_bytes = 5;  // Cache memory in bytes
+  double usage_percent = 6;  // Memory usage percentage
+  uint64 swap_total_bytes = 7;  // Total swap in bytes
+  uint64 swap_used_bytes = 8;  // Used swap in bytes
+  uint64 swap_free_bytes = 9;  // Free swap in bytes
+}
+
+message DiskUsage {
+  repeated DiskPartition partitions = 1;  // Disk partitions
+  uint64 total_bytes = 2;  // Total disk space in bytes
+  uint64 used_bytes = 3;  // Used disk space in bytes
+  uint64 free_bytes = 4;  // Free disk space in bytes
+  double usage_percent = 5;  // Disk usage percentage
+  double read_ops_per_second = 6;  // Read operations per second
+  double write_ops_per_second = 7;  // Write operations per second
+  uint64 read_bytes_per_second = 8;  // Read bytes per second
+  uint64 write_bytes_per_second = 9;  // Write bytes per second
+}
+
+message DiskPartition {
+  string mount_point = 1;  // Mount point
+  string device = 2;  // Device
+  string filesystem_type = 3;  // Filesystem type
+  uint64 total_bytes = 4;  // Total space in bytes
+  uint64 used_bytes = 5;  // Used space in bytes
+  uint64 free_bytes = 6;  // Free space in bytes
+  double usage_percent = 7;  // Usage percentage
+}
+
+message NetworkUsage {
+  string interface_name = 1;  // Network interface name
+  uint64 bytes_sent = 2;  // Total bytes sent
+  uint64 bytes_received = 3;  // Total bytes received
+  uint64 packets_sent = 4;  // Total packets sent
+  uint64 packets_received = 5;  // Total packets received
+  uint64 errors_in = 6;  // Input errors
+  uint64 errors_out = 7;  // Output errors
+  uint64 drops_in = 8;  // Input drops
+  uint64 drops_out = 9;  // Output drops
+  uint64 bytes_sent_per_second = 10;  // Bytes sent per second
+  uint64 bytes_received_per_second = 11;  // Bytes received per second
+  string connection_type = 12;  // Connection type (wifi, cellular, ethernet)
+  int32 signal_strength = 13;  // Signal strength (dBm), if applicable
+}
+
+message BatteryStatus {
+  double level_percent = 1;  // Battery level percentage
+  bool charging = 2;  // Whether the battery is charging
+  int32 temperature_celsius = 3;  // Battery temperature in Celsius
+  uint32 voltage_mv = 4;  // Battery voltage in millivolts
+  int32 current_ma = 5;  // Battery current in milliamps
+  uint32 remaining_time_minutes = 6;  // Estimated remaining time in minutes
+  uint32 health_percent = 7;  // Battery health percentage
+}
+
+// User Activity Metrics
+message UserMetrics {
+  uint32 active_users = 1;  // Number of active users
+  uint32 total_users = 2;  // Total number of users
+  uint32 new_users = 3;  // New users in the last period
+  uint32 transactions_per_minute = 4;  // Transactions per minute
+  uint32 active_sessions = 5;  // Active sessions
+  double average_session_duration_seconds = 6;  // Average session duration
+  double average_response_time_ms = 7;  // Average response time
+  uint32 error_count = 8;  // Error count
+  map<string, uint32> activity_counts = 9;  // Counts by activity type
+}
+
+// Network Metrics
+message NetworkMetrics {
+  uint32 connected_peers = 1;  // Number of connected peers
+  uint32 known_peers = 2;  // Number of known peers
+  uint32 active_connections = 3;  // Number of active connections
+  uint32 connection_attempts = 4;  // Connection attempts in the last period
+  uint32 failed_connections = 5;  // Failed connections in the last period
+  float packet_loss_rate = 6;  // Packet loss rate (0.0-1.0)
+  uint32 average_latency_ms = 7;  // Average latency in milliseconds
+  uint32 average_message_size_bytes = 8;  // Average message size in bytes
+  uint32 messages_per_minute = 9;  // Messages per minute
+  double bandwidth_usage_kbps = 10;  // Bandwidth usage in kbps
+  map<string, uint32> peers_by_region = 11;  // Peers by region
+}
+
+// Health Check System
+message HealthCheckDefinition {
+  string check_id = 1;  // Check identifier
+  string name = 2;  // Check name
+  string description = 3;  // Check description
+  enum CheckType {
+    HEARTBEAT = 0;  // Simple heartbeat check
+    THRESHOLD = 1;  // Threshold-based check
+    DEPENDENCY = 2;  // Dependency check
+    CUSTOM = 3;     // Custom check
+  }
+  CheckType check_type = 4;
+  uint32 interval_seconds = 5;  // Check interval
+  uint32 timeout_seconds = 6;  // Check timeout
+  bytes check_parameters = 7;  // Serialized check parameters
+  repeated string dependencies = 8;  // Dependencies for this check
+  uint32 failure_threshold = 9;  // Number of failures before alerting
+  uint32 success_threshold = 10;  // Number of successes before recovery
+}
+
+message HealthCheckResult {
+  string check_id = 1;  // Check identifier
+  int64 timestamp_ms = 2;  // Timestamp of check
+  enum Status {
+    UNKNOWN = 0;  // Status unknown
+    PASSING = 1;  // Check is passing
+    WARNING = 2;  // Check has warnings
+    FAILING = 3;  // Check is failing
+    CRITICAL = 4;  // Check is critical
+  }
+  Status status = 3;  // Check status
+  string output = 4;  // Check output
+  double execution_time_ms = 5;  // Execution time
+  uint32 consecutive_successes = 6;  // Consecutive successes
+  uint32 consecutive_failures = 7;  // Consecutive failures
+  bytes result_details = 8;  // Detailed result information
+}
+
+// Distributed Tracing
+message TraceSpan {
+  string trace_id = 1;  // Trace identifier
+  string span_id = 2;  // Span identifier
+  string parent_span_id = 3;  // Parent span identifier
+  string name = 4;  // Span name
+  int64 start_time_ms = 5;  // Start timestamp
+  int64 end_time_ms = 6;  // End timestamp
+  string component = 7;  // Component name
+  map<string, string> attributes = 8;  // Span attributes
+  repeated SpanEvent events = 9;  // Span events
+  enum SpanKind {
+    INTERNAL = 0;  // Internal operation
+    SERVER = 1;    // Server-side handling of a request
+    CLIENT = 2;    // Client-side of a request
+    PRODUCER = 3;  // Producer of asynchronous messages
+    CONSUMER = 4;  // Consumer of asynchronous messages
+  }
+  SpanKind kind = 10;
+  enum Status {
+    OK = 0;      // Success
+    ERROR = 1;   // Error
+    UNKNOWN = 2;  // Unknown
+  }
+  Status status = 11;
+  string status_message = 12;  // Status message
+}
+
+message SpanEvent {
+  string name = 1;  // Event name
+  int64 timestamp_ms = 2;  // Event timestamp
+  map<string, string> attributes = 3;  // Event attributes
+}
+
+// System Dashboard Configuration
+message DashboardConfiguration {
+  string dashboard_id = 1;  // Dashboard identifier
+  string name = 2;  // Dashboard name
+  string description = 3;  // Dashboard description
+  repeated DashboardPanel panels = 4;  // Dashboard panels
+  repeated string user_roles = 5;  // User roles with access
+  map<string, string> variables = 6;  // Dashboard variables
+  string refresh_interval = 7;  // Refresh interval
+}
+
+message DashboardPanel {
+  string panel_id = 1;  // Panel identifier
+  string title = 2;  // Panel title
+  string description = 3;  // Panel description
+  enum PanelType {
+    GRAPH = 0;     // Time-series graph
+    GAUGE = 1;     // Gauge visualization
+    TABLE = 2;     // Table visualization
+    TEXT = 3;      // Text panel
+    HEATMAP = 4;   // Heatmap visualization
+    STAT = 5;      // Single stat visualization
+    PIE = 6;       // Pie chart
+    BAR = 7;       // Bar chart
+    CUSTOM = 8;    // Custom visualization
+  }
+  PanelType type = 4;
+  string data_source = 5;  // Data source
+  string query = 6;  // Query string
+  bytes panel_configuration = 7;  // Serialized panel configuration
+  map<string, string> variables = 8;  // Panel variables
+  repeated string metrics = 9;  // Metrics to display
+} 

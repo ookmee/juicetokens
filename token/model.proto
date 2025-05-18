@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package juicetokens.token.model;
+
+/**
+ * Token Layer Core Model
+ * 
+ * This file defines the core token types and structures for the JuiceTokens protocol.
+ * It includes TokenId, Token, WisselToken and related structures for token operations.
+ */
+
+// TokenId uniquely identifies a token in the system
+message TokenId {
+  string id = 1;              // Unique identifier
+  string issuance_id = 2;     // Issuance identifier (typically location-based)
+  uint64 sequence_number = 3; // Sequence number within the issuance
+  uint64 creation_time_ms = 4; // Creation timestamp
+}
+
+// Token represents a basic digital value token
+message Token {
+  TokenId token_id = 1;       // Token identifier
+  uint32 denomination = 2;    // Token denomination value (1, 2, 5, 10, 20, 50, 100, 200, 500)
+  uint64 creation_time_ms = 3; // Creation timestamp
+  string issuer = 4;          // Issuer identifier
+  TokenStatus status = 5;     // Current token status
+  optional uint64 expiry_time_ms = 6; // Optional expiry time
+}
+
+// TokenStatus represents the current state of a token
+enum TokenStatus {
+  ACTIVE = 0;     // Token is active and can be used
+  RESERVED = 1;   // Token is reserved for a transaction
+  EXPIRED = 2;    // Token has expired
+  REVOKED = 3;    // Token has been revoked
+  CONSUMED = 4;   // Token has been consumed/spent
+}
+
+// WisselToken is a special token type with an "afrondingsbuffer" (rounding buffer)
+message WisselToken {
+  Token base_token = 1;            // The base token
+  float afrondingsbuffer = 2;      // Rounding buffer value (0.0-0.99)
+  uint64 last_updated_time_ms = 3; // Last update timestamp
+  string last_transaction_id = 4;  // ID of the last transaction that modified the buffer
+}
+
+// TokenBatch represents a collection of tokens for bulk operations
+message TokenBatch {
+  string batch_id = 1;                     // Batch identifier
+  repeated Token tokens = 2;               // Regular tokens
+  optional WisselToken wissel_token = 3;   // Optional WisselToken
+  uint64 creation_time_ms = 4;             // Batch creation timestamp
+  map<string, string> metadata = 5;        // Additional metadata
+}
+
+// TokenMetadata contains additional token information
+message TokenMetadata {
+  TokenId token_id = 1;                     // Token identifier
+  map<string, string> custom_attributes = 2; // Custom attributes
+  repeated string tags = 3;                  // Tags for categorization
+  string description = 4;                    // Optional token description
+}
+
+// TokenValidationResult represents the result of token validation
+message TokenValidationResult {
+  bool valid = 1;              // Overall validity
+  string error_message = 2;    // Error message if invalid
+  repeated string warnings = 3; // Warning messages
+  uint64 validation_time_ms = 4; // Validation timestamp
+} 

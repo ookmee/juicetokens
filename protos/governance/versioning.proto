@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package juicetokens.governance;
+
+// Protocol version information
+message ProtocolVersion {
+  string version = 1;  // Semantic version (e.g., "1.0.0")
+  string release_notes = 2;  // Human readable release notes
+  uint64 release_timestamp_ms = 3;  // When version was released
+  repeated string changed_components = 4;  // Components changed in this version
+  bool backwards_compatible = 5;  // Whether backwards compatible with previous version
+}
+
+// Health metrics for system monitoring
+message HealthMetric {
+  string metric_id = 1;  // Identifier for the metric
+  string component = 2;  // Component being measured
+  string metric_type = 3;  // Type of metric (counter, gauge, histogram)
+  double value = 4;  // Current value
+  string unit = 5;  // Unit of measurement
+  uint64 timestamp_ms = 6;  // When metric was collected
+  uint32 severity = 7;  // Severity level (0-3: info, warning, error, critical)
+}
+
+// System monitoring information
+message SystemHealth {
+  string instance_id = 1;  // Identifier for this instance
+  string version = 2;  // Protocol version in use
+  uint64 timestamp_ms = 3;  // When health data was collected
+  map<string, HealthMetric> metrics = 4;  // Health metrics by id
+  SystemStatus status = 5;  // Overall system status
+}
+
+// System status enumeration
+enum SystemStatus {
+  HEALTHY = 0;  // System is functioning normally
+  DEGRADED = 1;  // System is degraded but operational
+  CRITICAL = 2;  // System has critical issues
+  MAINTENANCE = 3;  // System is in maintenance mode
+} 

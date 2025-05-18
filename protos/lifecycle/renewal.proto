@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package juicetokens.lifecycle.renewal;
+
+import "token/model.proto";
+
+// Renewal Management
+message ExpiryNotification {
+  repeated juicetokens.token.model.TokenId expiring_tokens = 1;  // Expiring tokens
+  uint64 expiry_timestamp_ms = 2;  // Expiry timestamp
+  uint64 notification_timestamp_ms = 3;  // Notification timestamp
+  uint32 days_remaining = 4;  // Days remaining until expiry
+  bool requires_action = 5;  // Whether action is required
+}
+
+message RenewalRequest {
+  repeated juicetokens.token.model.TokenId tokens_to_renew = 1;  // Tokens to renew
+  string requester_id = 2;  // Requester identifier
+  uint64 request_timestamp_ms = 3;  // Request timestamp
+  bool request_facilitation = 4;  // Whether facilitation is requested
+  string message = 5;  // Optional message
+}
+
+message RenewalFacilitation {
+  string facilitation_id = 1;  // Facilitation identifier
+  string facilitator_id = 2;  // Facilitator identifier
+  string requestor_id = 3;  // Requestor identifier
+  repeated juicetokens.token.model.TokenId facilitated_tokens = 4;  // Facilitated tokens
+  uint64 facilitation_timestamp_ms = 5;  // Facilitation timestamp
+  RenewalReward reward = 6;  // Reward for facilitation
+}
+
+message RenewalReward {
+  uint64 expired_value_processed = 1;  // Expired value processed
+  uint64 base_facilitation_reward = 2;  // Base facilitation reward
+  float economic_activity_multiplier = 3;  // Economic activity multiplier
+  repeated juicetokens.token.model.TokenId new_tokens = 4;  // New tokens created as reward
+  
+  // Distribution across developmental stages
+  uint64 trust_building = 5;
+  uint64 autonomy_support = 6;
+  uint64 imagination_funding = 7;
+  uint64 competence_reward = 8;
+  uint64 identity_formation = 9;
+  uint64 connection_bridges = 10;
+  uint64 generativity_projects = 11;
+}
+
+message TelomeerRenewalTransformation {
+  juicetokens.token.model.TokenId old_token_id = 1;  // Old token ID
+  juicetokens.token.model.TokenId new_token_id = 2;  // New token ID
+  string owner_id = 3;  // Owner identifier
+  bytes renewal_signature = 4;  // Renewal signature
+  uint64 renewal_timestamp_ms = 5;  // Renewal timestamp
+  uint64 new_expiry_ms = 6;  // New expiry timestamp
+} 

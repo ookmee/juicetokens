@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package juicetokens.extension;
+
+// Extension point registration
+message ExtensionPoint {
+  string extension_point_id = 1;  // Unique identifier
+  string description = 2;  // Human readable description
+  repeated string supported_actions = 3;  // Actions supported at this extension point
+  map<string, string> parameters = 4;  // Expected parameters for this extension point
+}
+
+// Extension registration
+message ExtensionRegistration {
+  string extension_id = 1;  // Unique identifier for the extension
+  string name = 2;  // Human readable name
+  string description = 3;  // Description of the extension
+  string version = 4;  // Version of the extension
+  repeated string extension_points = 5;  // Extension points implemented
+  map<string, string> capabilities = 6;  // Extension capabilities
+}
+
+// Permission request for extension
+message PermissionRequest {
+  string extension_id = 1;  // Extension requesting permission
+  repeated string requested_permissions = 2;  // Permissions requested
+  string reason = 3;  // Reason for request
+}
+
+// Permission response
+message PermissionResponse {
+  string extension_id = 1;  // Extension requesting permission
+  repeated string granted_permissions = 2;  // Permissions granted
+  repeated string denied_permissions = 3;  // Permissions denied
+  uint64 expiry_timestamp_ms = 4;  // When permissions expire
+} 

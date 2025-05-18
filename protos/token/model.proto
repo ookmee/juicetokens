@@ -1,0 +1,416 @@
+syntax = "proto3";
+
+package juicetokens.token.model;
+
+option go_package = "github.com/juicetokens/protos/token/model";
+
+// Core Token Model
+// This file defines the protocol buffers for the core token model,
+// which represents the fundamental unit of value in the system.
+
+// Valid token denominations as specified in the protocol
+enum DenominationValue {
+  DENOMINATION_UNSPECIFIED = 0;
+  DENOMINATION_1 = 1;
+  DENOMINATION_2 = 2;
+  DENOMINATION_5 = 5;
+  DENOMINATION_10 = 10;
+  DENOMINATION_20 = 20;
+  DENOMINATION_50 = 50;
+  DENOMINATION_100 = 100;
+  DENOMINATION_200 = 200;
+  DENOMINATION_500 = 500;
+}
+
+// Token represents the fundamental unit of value
+message Token {
+  // Unique identifier for the token (LOCATION-REFERENCE-VALUE-INDEX format)
+  string id = 1;
+  
+  // Token denomination (must be one of the valid DenominationValue values)
+  DenominationValue denomination = 2;
+  
+  // Token value in smallest unit (e.g., cents)
+  uint64 value = 3;
+  
+  // Token metadata
+  TokenMetadata metadata = 4;
+  
+  // Creation timestamp in milliseconds
+  uint64 created_at_ms = 5;
+  
+  // Last update timestamp in milliseconds
+  uint64 updated_at_ms = 6;
+  
+  // Telomeer information for ownership tracking
+  Telomeer telomeer = 7;
+  
+  // Token state
+  TokenState state = 8;
+  
+  // Token version for optimistic concurrency control
+  uint32 version = 9;
+
+  // Token type (regular token or special purpose token)
+  TokenType type = 10;
+}
+
+// TokenType distinguishes between different types of tokens
+enum TokenType {
+  REGULAR = 0;
+  WISSEL = 1;  // Special exchange token
+  AFRONDING = 2;  // Fractional value buffer token
+}
+
+// TokenMetadata contains additional token information
+message TokenMetadata {
+  // Location information
+  Location location = 1;
+  
+  // Reference information
+  Reference reference = 2;
+  
+  // Additional attributes
+  map<string, string> attributes = 3;
+
+  // Token creation context
+  CreationContext creation_context = 4;
+}
+
+// CreationContext provides information about how the token was created
+message CreationContext {
+  // Creator's public key
+  bytes creator_public_key = 1;
+  
+  // Creation method (e.g., "MINT", "SPLIT", "MERGE")
+  string creation_method = 2;
+  
+  // Parent token IDs if created from existing tokens
+  repeated string parent_token_ids = 3;
+  
+  // Creation reason or purpose
+  string purpose = 4;
+}
+
+// Location represents geographical information
+message Location {
+  // Latitude in decimal degrees
+  double latitude = 1;
+  
+  // Longitude in decimal degrees
+  double longitude = 2;
+  
+  // Location accuracy in meters
+  float accuracy = 3;
+  
+  // Location timestamp in milliseconds
+  uint64 timestamp_ms = 4;
+
+  // S2 cell ID for geospatial indexing
+  string s2_cell_id = 5;
+}
+
+// Reference represents external reference information
+message Reference {
+  // Reference type (e.g., "INVOICE", "RECEIPT")
+  string type = 1;
+  
+  // Reference identifier
+  string id = 2;
+  
+  // Reference metadata
+  map<string, string> metadata = 3;
+
+  // Reference verification status
+  ReferenceVerificationStatus verification_status = 4;
+}
+
+// ReferenceVerificationStatus indicates the verification state of a reference
+enum ReferenceVerificationStatus {
+  UNVERIFIED = 0;
+  VERIFIED = 1;
+  VERIFICATION_FAILED = 2;
+  VERIFICATION_PENDING = 3;
+}
+
+// Telomeer tracks ownership history with enhanced security
+message Telomeer {
+  // Current owner's public key
+  bytes owner_public_key = 1;
+  
+  // Ownership proof (cryptographic signature)
+  bytes ownership_proof = 2;
+  
+  // Previous owner's public key
+  bytes previous_owner_public_key = 3;
+  
+  // Ownership transfer timestamp in milliseconds
+  uint64 transfer_timestamp_ms = 4;
+  
+  // Ownership history with enhanced security
+  repeated OwnershipRecord ownership_history = 5;
+
+  // Merkle root of the ownership history
+  bytes ownership_history_root = 6;
+
+  // Number of ownership transfers
+  uint32 transfer_count = 7;
+
+  // Chain of custody verification status
+  ChainOfCustodyStatus chain_of_custody_status = 8;
+}
+
+// ChainOfCustodyStatus indicates the verification state of the ownership chain
+enum ChainOfCustodyStatus {
+  UNVERIFIED = 0;
+  VERIFIED = 1;
+  VERIFICATION_FAILED = 2;
+  VERIFICATION_PENDING = 3;
+}
+
+// OwnershipRecord represents a historical ownership entry with enhanced security
+message OwnershipRecord {
+  // Owner's public key
+  bytes owner_public_key = 1;
+  
+  // Ownership start timestamp in milliseconds
+  uint64 start_timestamp_ms = 2;
+  
+  // Ownership end timestamp in milliseconds
+  uint64 end_timestamp_ms = 3;
+  
+  // Ownership proof (cryptographic signature)
+  bytes ownership_proof = 4;
+
+  // Merkle proof for this record
+  bytes merkle_proof = 5;
+
+  // Transfer method (e.g., "DIRECT", "SPLIT", "MERGE")
+  string transfer_method = 6;
+
+  // Transfer context
+  map<string, string> transfer_context = 7;
+}
+
+// TokenState represents the current state of a token
+enum TokenState {
+  ACTIVE = 0;
+  FROZEN = 1;
+  EXPIRED = 2;
+  REVOKED = 3;
+  PENDING = 4;
+  SPLIT = 5;  // Token has been split into smaller denominations
+  MERGED = 6;  // Token has been merged with others
+}
+
+// TokenId uniquely identifies a token
+message TokenId {
+  // Token identifier
+  string id = 1;
+  
+  // Token version
+  uint32 version = 2;
+}
+
+// TokenUpdate represents a change in token value or ownership
+message TokenUpdate {
+  // Token identifier
+  string token_id = 1;
+  
+  // New value (if changed)
+  uint64 new_value = 2;
+  
+  // New owner's public key (if changed)
+  bytes new_owner_public_key = 3;
+  
+  // Update timestamp in milliseconds
+  uint64 timestamp_ms = 4;
+  
+  // Update proof
+  bytes update_proof = 5;
+}
+
+// WisselToken represents the special exchange token each user owns
+message WisselToken {
+  // Token ID
+  string id = 1;
+  
+  // Owner's public key
+  bytes owner_public_key = 2;
+  
+  // Creation timestamp
+  uint64 created_at_ms = 3;
+  
+  // Last used timestamp
+  uint64 last_used_ms = 4;
+  
+  // Usage count
+  uint32 usage_count = 5;
+  
+  // Current state
+  WisselTokenState state = 6;
+  
+  // Exchange history
+  repeated ExchangeRecord exchange_history = 7;
+  
+  // Fractional value buffer (0.0-0.99)
+  float afrondingsbuffer = 8;
+  
+  // IMPORTANT CONSTRAINTS:
+  // 1. The Wisseltoken becomes unspendable if it's the last token (or one of the last two tokens)
+  //    left from an issuance in a user's portfolio
+  // 2. This enforces an "all or nothing" rule for the final tokens - you either spend your
+  //    whole Wisseltoken including afrondingsbuffer or you keep it
+  // 3. The system enforces a minimum account balance (>2) to ensure there's always a token
+  //    to log back the updated afrondingsbuffer after small transactions
+  // 4. This prevents issues with trying to track a floating afrondingsbuffer without a
+  //    token to attach it to
+}
+
+// WisselTokenState represents the state of a WisselToken
+enum WisselTokenState {
+  WISSEL_ACTIVE = 0;
+  WISSEL_LOCKED = 1;
+  WISSEL_EXPIRED = 2;
+  WISSEL_REVOKED = 3;
+}
+
+// ExchangeRecord represents a historical exchange using the WisselToken
+message ExchangeRecord {
+  // Exchange timestamp
+  uint64 timestamp_ms = 1;
+  
+  // Counterparty's public key
+  bytes counterparty_public_key = 2;
+  
+  // Exchange type
+  string exchange_type = 3;
+  
+  // Exchange amount
+  uint64 amount = 4;
+  
+  // Exchange proof
+  bytes exchange_proof = 5;
+}
+
+// AfrondingBuffer represents the fractional value buffer (0-0.99)
+message AfrondingBuffer {
+  // Buffer ID
+  string id = 1;
+  
+  // Owner's public key
+  bytes owner_public_key = 2;
+  
+  // Current buffer value (in smallest unit)
+  uint64 value = 3;
+  
+  // Creation timestamp
+  uint64 created_at_ms = 4;
+  
+  // Last update timestamp
+  uint64 updated_at_ms = 5;
+  
+  // Buffer state
+  AfrondingBufferState state = 6;
+  
+  // Buffer history
+  repeated BufferRecord buffer_history = 7;
+}
+
+// AfrondingBufferState represents the state of an AfrondingBuffer
+enum AfrondingBufferState {
+  BUFFER_ACTIVE = 0;
+  BUFFER_FROZEN = 1;
+  BUFFER_EXPIRED = 2;
+  BUFFER_REVOKED = 3;
+}
+
+// BufferRecord represents a historical buffer operation
+message BufferRecord {
+  // Operation timestamp
+  uint64 timestamp_ms = 1;
+  
+  // Operation type (e.g., "ADD", "SUBTRACT", "RESET")
+  string operation_type = 2;
+  
+  // Operation amount
+  uint64 amount = 3;
+  
+  // Previous value
+  uint64 previous_value = 4;
+  
+  // New value
+  uint64 new_value = 5;
+  
+  // Operation proof
+  bytes operation_proof = 6;
+}
+
+// TokenService defines the RPC methods for token operations
+service TokenService {
+  // GetToken retrieves a token by ID
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse);
+  
+  // ListTokens lists tokens matching criteria
+  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse);
+  
+  // CreateToken creates a new token
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+  
+  // UpdateToken updates an existing token
+  rpc UpdateToken(UpdateTokenRequest) returns (UpdateTokenResponse);
+  
+  // StreamTokenUpdates streams token updates
+  rpc StreamTokenUpdates(StreamTokenUpdatesRequest) returns (stream TokenUpdate);
+}
+
+// Request/Response messages for TokenService
+message GetTokenRequest {
+  string token_id = 1;
+}
+
+message GetTokenResponse {
+  Token token = 1;
+}
+
+message ListTokensRequest {
+  string denomination = 1;
+  uint64 min_value = 2;
+  uint64 max_value = 3;
+  TokenState state = 4;
+  uint32 limit = 5;
+  string page_token = 6;
+}
+
+message ListTokensResponse {
+  repeated Token tokens = 1;
+  string next_page_token = 2;
+}
+
+message CreateTokenRequest {
+  string denomination = 1;
+  uint64 value = 2;
+  TokenMetadata metadata = 3;
+  bytes owner_public_key = 4;
+}
+
+message CreateTokenResponse {
+  Token token = 1;
+}
+
+message UpdateTokenRequest {
+  string token_id = 1;
+  uint64 new_value = 2;
+  bytes new_owner_public_key = 3;
+  TokenState new_state = 4;
+}
+
+message UpdateTokenResponse {
+  Token token = 1;
+}
+
+message StreamTokenUpdatesRequest {
+  string token_id = 1;
+}
+
+// End of TokenService definitions 

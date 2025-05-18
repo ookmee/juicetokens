@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package juicetokens.token.telomeer;
+
+option go_package = "github.com/juicetokens/protos/token/telomeer";
+
+// Telomeer Management Layer
+// This file defines the protocol buffers for telomeer management,
+// which handles ownership tracking and transfer of tokens.
+
+// OwnershipProof represents cryptographic proof of ownership
+message OwnershipProof {
+  // Proof type (e.g., "SIGNATURE", "ZKP")
+  string proof_type = 1;
+  
+  // Proof data
+  bytes proof_data = 2;
+  
+  // Proof timestamp in milliseconds
+  uint64 timestamp_ms = 3;
+  
+  // Proof metadata
+  map<string, string> metadata = 4;
+}
+
+// OwnershipTransfer represents a token ownership transfer
+message OwnershipTransfer {
+  // Token identifier
+  string token_id = 1;
+  
+  // Previous owner's public key
+  bytes previous_owner_public_key = 2;
+  
+  // New owner's public key
+  bytes new_owner_public_key = 3;
+  
+  // Transfer timestamp in milliseconds
+  uint64 timestamp_ms = 4;
+  
+  // Transfer proof
+  OwnershipProof proof = 5;
+  
+  // Transfer metadata
+  map<string, string> metadata = 6;
+}
+
+// OwnershipVerificationRequest represents a request to verify ownership
+message OwnershipVerificationRequest {
+  // Token identifier
+  string token_id = 1;
+  
+  // Owner's public key
+  bytes owner_public_key = 2;
+  
+  // Ownership proof
+  OwnershipProof proof = 3;
+}
+
+// OwnershipVerificationResponse represents the result of ownership verification
+message OwnershipVerificationResponse {
+  // Whether ownership is verified
+  bool is_verified = 1;
+  
+  // Verification timestamp in milliseconds
+  uint64 timestamp_ms = 2;
+  
+  // Verification details
+  map<string, string> details = 3;
+}
+
+// OwnershipHistory represents the complete ownership history of a token
+message OwnershipHistory {
+  // Token identifier
+  string token_id = 1;
+  
+  // Ownership records
+  repeated OwnershipRecord records = 2;
+  
+  // History metadata
+  map<string, string> metadata = 3;
+}
+
+// OwnershipRecord represents a historical ownership entry
+message OwnershipRecord {
+  // Owner's public key
+  bytes owner_public_key = 1;
+  
+  // Ownership start timestamp in milliseconds
+  uint64 start_timestamp_ms = 2;
+  
+  // Ownership end timestamp in milliseconds
+  uint64 end_timestamp_ms = 3;
+  
+  // Ownership proof
+  OwnershipProof proof = 4;
+  
+  // Record metadata
+  map<string, string> metadata = 5;
+}
+
+// TelomeerService defines the RPC methods for telomeer operations
+service TelomeerService {
+  // VerifyOwnership verifies token ownership
+  rpc VerifyOwnership(OwnershipVerificationRequest) returns (OwnershipVerificationResponse);
+  
+  // TransferOwnership transfers token ownership
+  rpc TransferOwnership(TransferOwnershipRequest) returns (TransferOwnershipResponse);
+  
+  // GetOwnershipHistory retrieves token ownership history
+  rpc GetOwnershipHistory(GetOwnershipHistoryRequest) returns (GetOwnershipHistoryResponse);
+  
+  // StreamOwnershipUpdates streams ownership updates
+  rpc StreamOwnershipUpdates(StreamOwnershipUpdatesRequest) returns (stream OwnershipTransfer);
+}
+
+// Request/Response messages for TelomeerService
+message TransferOwnershipRequest {
+  string token_id = 1;
+  bytes new_owner_public_key = 2;
+  OwnershipProof proof = 3;
+}
+
+message TransferOwnershipResponse {
+  bool success = 1;
+  OwnershipTransfer transfer = 2;
+  string error_message = 3;
+}
+
+message GetOwnershipHistoryRequest {
+  string token_id = 1;
+  uint32 limit = 2;
+  string page_token = 3;
+}
+
+message GetOwnershipHistoryResponse {
+  OwnershipHistory history = 1;
+  string next_page_token = 2;
+}
+
+message StreamOwnershipUpdatesRequest {
+  string token_id = 1;
+} 

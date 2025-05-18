@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package juicetokens.trust.attestation;
+
+import "foundation/persistence.proto";  // For DHT references
+
+// Attestation Record Format
+message SystemAttestation {
+  string attestation_id = 1;  // Unique attestation identifier
+  string subject_id = 2;  // Subject being attested
+  string attestation_type = 3;  // Type of attestation
+  bytes evidence = 4;  // Cryptographic evidence
+  uint64 timestamp_ms = 5;  // Timestamp of attestation
+  uint32 confidence_score = 6;  // Confidence score (0-100)
+  string system_source = 7;  // Source system
+}
+
+message PeerAttestation {
+  string attestation_id = 1;  // Unique attestation identifier
+  string subject_id = 2;  // Subject being attested
+  string attester_id = 3;  // Peer making the attestation
+  string attestation_type = 4;  // Type of attestation
+  string attestation_content = 5;  // Content of attestation
+  uint32 strength = 6;  // Strength of attestation (0-100)
+  uint64 timestamp_ms = 7;  // Timestamp of attestation
+  bytes signature = 8;  // Signature by attester
+}
+
+message CommunityAttestation {
+  string attestation_id = 1;  // Unique attestation identifier
+  string subject_id = 2;  // Subject being attested
+  string community_id = 3;  // Community making the attestation
+  string attestation_type = 4;  // Type of attestation
+  string attestation_content = 5;  // Content of attestation
+  uint32 approval_count = 6;  // Number of approvals
+  uint32 threshold = 7;  // Threshold for validity
+  uint64 timestamp_ms = 8;  // Timestamp of attestation
+  bytes community_signature = 9;  // Collective signature
+}
+
+message AttestationMetadata {
+  string context = 1;  // Context of the attestation
+  string geographic_region = 2;  // Geographic region
+  string cultural_context = 3;  // Cultural context
+  uint64 valid_from_ms = 4;  // Validity start time
+  uint64 valid_until_ms = 5;  // Validity end time
+  repeated string tags = 6;  // Tags for categorization
+}
+
+// Wrapper message for DHT storage of attestations
+message AttestationDHTWrapper {
+  oneof attestation {
+    SystemAttestation system_attestation = 1;
+    PeerAttestation peer_attestation = 2;
+    CommunityAttestation community_attestation = 3;
+  }
+  AttestationMetadata metadata = 4;
+  AttestationStorage storage_config = 5;
+  string entry_type = 6;  // Fixed to "attestation" for DHT entry_type field
+}
+
+// Distribution and Storage Mechanisms
+message GeospatialShard {
+  string s2_cell_id = 1;  // S2 cell identifier
+  uint32 level = 2;  // Cell level (precision)
+  repeated string contained_attestation_ids = 3;  // Contained attestations
+  bytes merkle_root = 4;  // Merkle root of attestations
+  uint64 last_updated_ms = 5;  // Last update timestamp
+}
+
+message AttestationExpiry {
+  string attestation_id = 1;  // Attestation identifier
+  uint64 creation_ms = 2;  // Creation timestamp
+  uint64 expiry_ms = 3;  // Expiry timestamp
+  bool auto_renew = 4;  // Whether to auto-renew
+  string renewal_policy = 5;  // Renewal policy
+}
+
+message PrivacyPreservingLookup {
+  bytes blinded_query = 1;  // Blinded query
+  string query_type = 2;  // Type of query
+  bytes query_parameters = 3;  // Additional parameters
+  bool reveal_metadata = 4;  // Whether to reveal metadata
+}
+
+message AttestationStorage {
+  enum StorageType {
+    LOCAL = 0;  // Local storage only
+    DHT = 1;    // Distributed hash table
+    BOTH = 2;   // Both local and DHT
+  }
+  StorageType storage_type = 1;
+  bool encrypted = 2;  // Whether the attestation is encrypted
+  string encryption_scheme = 3;  // Encryption scheme
+  repeated string authorized_viewers = 4;  // Authorized viewers
+}
+
+// DHT-specific messages
+message AttestationDHTPublish {
+  string attestation_id = 1;  // Attestation identifier
+  bytes attestation_data = 2;  // Serialized AttestationDHTWrapper
+  string s2_cell_id = 3;  // Geospatial shard
+  uint32 ttl_seconds = 4;  // Time-to-live in seconds
+  bool replicate = 5;  // Whether to replicate across multiple shards
+  uint32 replication_factor = 6;  // Number of replications
+}
+
+message AttestationDHTQuery {
+  string attestation_id = 1;  // Optional specific attestation ID
+  string subject_id = 2;  // Optional subject to search for
+  string attester_id = 3;  // Optional attester to search for
+  string attestation_type = 4;  // Optional type to search for
+  string s2_cell_id = 5;  // Optional geospatial filter
+  uint32 max_results = 6;  // Maximum number of results to return
+  bool include_expired = 7;  // Whether to include expired attestations
+}
+
+message AttestationDHTQueryResult {
+  repeated AttestationDHTWrapper attestations = 1;  // Found attestations
+  uint32 total_results = 2;  // Total number of results (may be more than returned)
+  bool truncated = 3;  // Whether results were truncated
+  string continuation_token = 4;  // Token for fetching next batch
+}
+
+// Personal Chain reference
+message AttestationChainEntry {
+  string attestation_id = 1;  // Attestation identifier
+  uint64 sequence_number = 2;  // Sequence number in personal chain
+  string entry_type = 3;  // Fixed to "attestation" 
+  enum Direction {
+    GIVEN = 0;  // Attestation given to someone else
+    RECEIVED = 1;  // Attestation received from someone else
+    OBSERVED = 2;  // Attestation observed (not directly involved)
+  }
+  Direction direction = 4;
+  string counterparty_id = 5;  // ID of the other party involved
+  bytes dht_key = 6;  // DHT key where attestation is stored
+  bytes attestation_hash = 7;  // Hash of the attestation for verification
+}
+
+// Identity and Authentication
+message KeyPair {
+  string key_id = 1;  // Key identifier
+  bytes public_key = 2;  // Public key
+  // Note: private key is never included in messages
+  string algorithm = 3;  // Algorithm (e.g., "Ed25519")
+  uint64 creation_ms = 4;  // Creation timestamp
+  uint64 expiry_ms = 5;  // Expiry timestamp
+}
+
+message IdentityProof {
+  string identity_id = 1;  // Identity identifier
+  bytes challenge = 2;  // Challenge data
+  bytes response = 3;  // Response proving control
+  uint64 timestamp_ms = 4;  // Timestamp of proof
+  string proof_type = 5;  // Type of proof
+}
+
+message KeyRotation {
+  string identity_id = 1;  // Identity identifier
+  string old_key_id = 2;  // Old key identifier
+  string new_key_id = 3;  // New key identifier
+  bytes rotation_proof = 4;  // Proof of rotation right
+  uint64 rotation_timestamp_ms = 5;  // Rotation timestamp
+}
+
+message RevocationCertificate {
+  string revoked_id = 1;  // ID being revoked
+  enum RevocationType {
+    KEY = 0;        // Key revocation
+    ATTESTATION = 1;  // Attestation revocation
+    IDENTITY = 2;   // Identity revocation
+  }
+  RevocationType revocation_type = 2;
+  string reason = 3;  // Reason for revocation
+  uint64 revocation_timestamp_ms = 4;  // Revocation timestamp
+  bytes authorizing_signature = 5;  // Signature authorizing revocation
+} 

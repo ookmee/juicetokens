@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../common" },
+    { "path": "../foundation" },
+    { "path": "../transport" },
+    { "path": "../token" },
+    { "path": "../trust" },
+    { "path": "../lifecycle" },
+    { "path": "../extension" },
+    { "path": "../governance" },
+    { "path": "../proto" }
+  ]
+} 

@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package juicetokens.transport.pipe;
+
+option go_package = "github.com/juicetokens/protos/transport/pipe";
+
+// Transport Protocol Handlers
+enum PipeType {
+  QR_KISS = 0;  // Visual QR code exchange
+  BLE = 1;      // Bluetooth Low Energy
+  NFC = 2;      // Near Field Communication
+  WEB = 3;      // Web-based (HTTPS)
+}
+
+message PipeConfiguration {
+  // Common configuration
+  PipeType pipe_type = 1;
+  string pipe_id = 2;         // Unique identifier for this pipe
+  uint32 timeout_ms = 3;      // Timeout in milliseconds
+  
+  // Type-specific configuration
+  oneof type_config {
+    QrKissConfig qr_kiss = 4;
+    BleConfig ble = 5;
+    NfcConfig nfc = 6;
+    WebConfig web = 7;
+  }
+}
+
+message QrKissConfig {
+  uint32 qr_code_version = 1;        // QR code version
+  string error_correction_level = 2;  // L, M, Q, H
+  uint32 chunk_size_bytes = 3;       // Size of each chunk in bytes
+  uint32 display_size_pixels = 4;    // Display size in pixels
+}
+
+message BleConfig {
+  string service_uuid = 1;           // BLE service UUID
+  string characteristic_uuid = 2;    // BLE characteristic UUID
+  bool require_bonding = 3;          // Whether bonding is required
+  uint32 mtu_size = 4;               // Maximum transfer unit size
+}
+
+message NfcConfig {
+  string aid = 1;                    // Application identifier
+  bool use_secure_element = 2;       // Whether to use secure element
+  uint32 max_message_size = 3;       // Maximum message size
+}
+
+message WebConfig {
+  string endpoint_url = 1;           // Endpoint URL
+  bool use_websocket = 2;            // Whether to use WebSocket
+  map<string, string> headers = 3;   // HTTP headers
+  bool use_tls = 4;                  // Whether to use TLS
+}
+
+message PipeStatus {
+  string pipe_id = 1;                // Pipe identifier
+  PipeType pipe_type = 2;            // Type of pipe
+  enum State {
+    INITIALIZING = 0;
+    READY = 1;
+    CONNECTED = 2;
+    TRANSFERRING = 3;
+    DISCONNECTED = 4;
+    ERROR = 5;
+  }
+  State state = 3;
+  string error_message = 4;          // Error message if state is ERROR
+  uint64 bytes_sent = 5;             // Number of bytes sent
+  uint64 bytes_received = 6;         // Number of bytes received
+  uint32 round_trip_time_ms = 7;     // Average round-trip time
+  uint32 uptime_seconds = 8;         // Connection uptime in seconds
+}
+
+message PipeCapabilities {
+  PipeType pipe_type = 1;                       // Type of pipe
+  uint32 max_message_size_bytes = 2;            // Maximum message size
+  uint32 max_throughput_bytes_per_second = 3;   // Maximum throughput
+  bool supports_bidirectional = 4;              // Whether bidirectional communication is supported
+  bool requires_user_interaction = 5;           // Whether user interaction is required
+  bool supports_background_operation = 6;       // Whether background operation is supported
+  repeated string supported_features = 7;       // Additional supported features
+}
+
+// Pipe operations
+message PipeCreateRequest {
+  PipeConfiguration configuration = 1;  // Pipe configuration
+  string target_info = 2;               // Target information (e.g., device ID, URL)
+  bool is_initiator = 3;                // Whether this side initiates the connection
+}
+
+message PipeCreateResponse {
+  bool success = 1;               // Whether creation succeeded
+  string pipe_id = 2;             // Pipe identifier
+  PipeStatus status = 3;          // Initial status
+  PipeCapabilities capabilities = 4;  // Pipe capabilities
+  string error_message = 5;       // Error message if creation failed
+}
+
+message PipeCloseRequest {
+  string pipe_id = 1;             // Pipe identifier
+  bool force = 2;                 // Whether to force close
+}
+
+message PipeCloseResponse {
+  bool success = 1;               // Whether close succeeded
+  string error_message = 2;       // Error message if close failed
+}
+
+message PipeStatusRequest {
+  string pipe_id = 1;             // Pipe identifier
+}
+
+message PipeStatusResponse {
+  PipeStatus status = 1;          // Pipe status
+  map<string, string> metrics = 2;  // Additional metrics
+}
+
+// PipeService defines the RPC methods for pipe operations
+service PipeService {
+  // CreatePipe creates a new communication channel
+  rpc CreatePipe(PipeCreateRequest) returns (PipeCreateResponse);
+  
+  // ClosePipe closes a communication channel
+  rpc ClosePipe(PipeCloseRequest) returns (PipeCloseResponse);
+  
+  // GetPipeStatus gets the status of a pipe
+  rpc GetPipeStatus(PipeStatusRequest) returns (PipeStatusResponse);
+  
+  // Bidirectional streaming for pipe communication
+  rpc StreamData(stream PipeDataChunk) returns (stream PipeDataChunk);
+}
+
+// PipeDataChunk represents a chunk of data sent through a pipe
+message PipeDataChunk {
+  string pipe_id = 1;           // Pipe identifier
+  bytes data = 2;               // Chunk data
+  uint32 sequence_number = 3;   // Sequence number
+  uint32 total_chunks = 4;      // Total number of chunks
+  bool is_last_chunk = 5;       // Whether this is the last chunk
+  string message_id = 6;        // Message identifier
+} 

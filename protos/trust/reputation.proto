@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package juicetokens.trust.reputation;
+
+import "trust/attestation.proto";  // For attestation references
+
+// Multi-dimensional Scoring
+message ReputationMetric {
+  string metric_id = 1;  // Unique metric identifier
+  string name = 2;  // Human-readable name
+  string description = 3;  // Description of the metric
+  float value = 4;  // Current value (0.0-1.0)
+  float confidence = 5;  // Confidence in the value (0.0-1.0)
+  repeated string contributing_attestations = 6;  // Contributing attestations
+}
+
+message ReliabilityScore {
+  float successful_transactions_rate = 1;  // Rate of successful transactions
+  float on_time_completion_rate = 2;  // Rate of on-time completions
+  float average_response_time_seconds = 3;  // Average response time
+  uint32 transaction_count = 4;  // Number of transactions
+  float score = 5;  // Overall score (0.0-1.0)
+}
+
+message ContributionScore {
+  float renewal_facilitation_rate = 1;  // Rate of helping with renewals
+  float attestation_contribution_rate = 2;  // Rate of providing attestations
+  float network_relay_contribution = 3;  // Contribution to the mesh network
+  uint32 contribution_count = 4;  // Number of contributions
+  float score = 5;  // Overall score (0.0-1.0)
+}
+
+message ValidationScore {
+  float community_consensus_alignment = 1;  // Alignment with community consensus
+  float attestation_verification_rate = 2;  // Rate of verified attestations
+  float false_attestation_rate = 3;  // Rate of false attestations
+  uint32 validation_count = 4;  // Number of validations
+  float score = 5;  // Overall score (0.0-1.0)
+}
+
+// Combined reputation profile
+message ReputationProfile {
+  string user_id = 1;  // User identifier
+  ReliabilityScore reliability = 2;  // Reliability dimension
+  ContributionScore contribution = 3;  // Contribution dimension
+  ValidationScore validation = 4;  // Validation dimension
+  repeated ReputationMetric custom_metrics = 5;  // Custom metrics
+  uint64 last_updated_ms = 6;  // Last update timestamp
+  bytes profile_hash = 7;  // Hash of the profile for verification
+}
+
+// Contextual Analysis
+message EnvironmentalContext {
+  bool crisis_mode = 1;  // Whether there is a crisis
+  string crisis_type = 2;  // Type of crisis
+  float severity = 3;  // Severity (0.0-1.0)
+  uint64 detected_at_ms = 4;  // When the context was detected
+  map<string, float> adjusted_thresholds = 5;  // Adjusted thresholds
+}
+
+message GeographicContext {
+  string s2_cell_id = 1;  // S2 cell identifier
+  string region_name = 2;  // Region name
+  float population_density = 3;  // Population density
+  float connectivity_index = 4;  // Connectivity index (0.0-1.0)
+  map<string, float> regional_factors = 5;  // Regional adjustment factors
+}
+
+message TemporalPattern {
+  enum PatternType {
+    CYCLICAL = 0;  // Repeating pattern
+    TREND = 1;     // Directional trend
+    SEASONAL = 2;  // Seasonal pattern
+    EVENT = 3;     // Event-related pattern
+  }
+  PatternType pattern_type = 1;
+  string metric_id = 2;  // Affected metric
+  float significance = 3;  // Significance (0.0-1.0)
+  string description = 4;  // Description of the pattern
+  map<string, float> temporal_adjustment_factors = 5;  // Temporal adjustment factors
+}
+
+message ContextualAdjustment {
+  string metric_id = 1;  // Affected metric
+  float base_value = 2;  // Base value before adjustment
+  float adjusted_value = 3;  // Value after adjustment
+  map<string, float> adjustment_factors = 4;  // Applied adjustment factors
+  string adjustment_rationale = 5;  // Explanation for the adjustment
+}
+
+// Reputation data calculation and update
+message ReputationUpdate {
+  string user_id = 1;  // User ID being updated
+  string update_source = 2;  // Source of the update
+  enum UpdateType {
+    TRANSACTION = 0;  // Transaction-based update
+    ATTESTATION = 1;  // Attestation-based update
+    NETWORK = 2;      // Network activity update
+    MANUAL = 3;       // Manual adjustment
+    PERIODIC = 4;     // Periodic recalculation
+  }
+  UpdateType update_type = 3;
+  string metric_id = 4;  // Specific metric being updated
+  float old_value = 5;  // Previous value
+  float new_value = 6;  // New value
+  float confidence = 7;  // Update confidence (0.0-1.0)
+  repeated string evidence_ids = 8;  // Evidence supporting the update
+  uint64 timestamp_ms = 9;  // Update timestamp
+}
+
+message ReputationHistory {
+  string user_id = 1;  // User identifier
+  string metric_id = 2;  // Metric identifier
+  repeated HistoryPoint history_points = 3;  // Historical values
+  
+  message HistoryPoint {
+    uint64 timestamp_ms = 1;  // Point timestamp
+    float value = 2;  // Value at that time
+    float confidence = 3;  // Confidence at that time
+    string evidence_id = 4;  // Primary evidence for this point
+  }
+}
+
+// DHT integration for reputation
+message ReputationDHTEntry {
+  bytes reputation_data = 1;  // Serialized ReputationProfile
+  string user_id = 2;  // User identifier
+  uint64 timestamp_ms = 3;  // Entry timestamp
+  bytes signature = 4;  // Signature by authoritative source
+  string authoritative_source = 5;  // Source of this reputation data
+  uint32 ttl_seconds = 6;  // Time-to-live in seconds
+  string entry_type = 7;  // Fixed to "reputation" for DHT entry_type field
+}
+
+// Attestation Oracle Protocol
+message WitnessSelection {
+  string attestation_id = 1;  // Attestation identifier
+  repeated string candidate_witnesses = 2;  // Candidate witnesses
+  repeated string selected_witnesses = 3;  // Selected witnesses
+  string selection_algorithm = 4;  // Algorithm used for selection
+  uint32 minimum_witnesses = 5;  // Minimum required witnesses
+  bytes selection_seed = 6;  // Seed used for selection (for verifiability)
+}
+
+message ThresholdSignature {
+  bytes message_hash = 1;  // Hash of the message
+  uint32 threshold = 2;  // Threshold for validity
+  repeated bytes signature_shares = 3;  // Individual signature shares
+  bytes combined_signature = 4;  // Combined threshold signature
+  repeated string signers = 5;  // Identities of the signers
+}
+
+message VerificationCircuit {
+  bytes circuit_description = 1;  // ZK circuit description
+  bytes public_inputs = 2;  // Public inputs to the circuit
+  bytes proof = 3;  // Zero-knowledge proof
+  bool verification_result = 4;  // Verification result
+  string circuit_type = 5;  // Type of circuit
+}
+
+message TemporalSecurity {
+  uint64 attestation_timestamp_ms = 1;  // Attestation timestamp
+  bytes timestamp_proof = 2;  // Proof of timestamp validity
+  repeated string time_sources = 3;  // Sources used for time verification
+  float time_confidence = 4;  // Confidence in the timestamp (0.0-1.0)
+}
+
+// Personal chain integration
+message ReputationChainEntry {
+  string user_id = 1;  // User the reputation is for 
+  bytes reputation_profile_hash = 2;  // Hash of the reputation profile
+  uint64 sequence_number = 3;  // Sequence number in personal chain
+  string entry_type = 4;  // Fixed to "reputation"
+  uint64 timestamp_ms = 5;  // Entry timestamp
+  bytes dht_key = 6;  // DHT key where full profile is stored
+} 

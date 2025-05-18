@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package juicetokens.lifecycle.developmental_stage;
+
+// Developmental Stage System
+// This module defines the developmental stages that users progress through
+// in the JuiceTokens ecosystem, renamed from the previous "phase" terminology.
+
+// Developmental Stage Levels
+enum DevelopmentalStageLevel {
+  TRUST = 0;            // Building initial trust in the system
+  AUTONOMY = 1;         // Developing independence and self-direction
+  IMAGINATION = 2;      // Exploring creative possibilities
+  COMPETENCE = 3;       // Mastering skills and demonstrating ability
+  IDENTITY = 4;         // Defining personal values and self-concept
+  CONNECTION = 5;       // Building meaningful relationships with others
+  GENERATIVITY = 6;     // Creating lasting value for future generations
+}
+
+// User's Developmental Stage Status
+message UserDevelopmentalStageStatus {
+  string user_id = 1;               // User identifier
+  map<string, StageMetric> stage_metrics = 2;  // Metrics for each developmental stage
+  DevelopmentalStageLevel current_primary_stage = 3;  // User's current primary stage
+  DevelopmentalStageLevel current_secondary_stage = 4;  // User's current secondary stage
+  uint64 last_transition_ms = 5;    // Timestamp of last stage transition
+  repeated StageTransition stage_history = 6;  // History of stage transitions
+}
+
+// Metrics for a specific developmental stage
+message StageMetric {
+  DevelopmentalStageLevel stage = 1;  // The developmental stage
+  float progress = 2;                 // Progress within stage (0.0-1.0)
+  uint32 experience_points = 3;       // Experience points earned in this stage
+  uint32 activities_completed = 4;    // Number of stage-relevant activities completed
+  uint64 time_in_stage_ms = 5;        // Time spent in this stage
+  repeated string completed_milestones = 6;  // Completed stage milestones
+  float mastery_score = 7;            // Mastery score (0.0-1.0)
+}
+
+// Records a transition between developmental stages
+message StageTransition {
+  DevelopmentalStageLevel from_stage = 1;  // Previous stage
+  DevelopmentalStageLevel to_stage = 2;    // New stage
+  uint64 transition_time_ms = 3;           // When the transition occurred
+  string transition_trigger = 4;           // What triggered the transition
+  float from_stage_mastery = 5;            // Mastery level of previous stage (0.0-1.0)
+  bytes transition_signature = 6;          // Cryptographic signature of the transition
+  repeated string witness_ids = 7;         // Witnesses to the transition
+}
+
+// Developmental Stage Activity
+message DevelopmentalStageActivity {
+  string activity_id = 1;                  // Activity identifier
+  string activity_name = 2;                // Human-readable name
+  string description = 3;                  // Activity description
+  DevelopmentalStageLevel primary_stage = 4;  // Primary stage this activity belongs to
+  repeated DevelopmentalStageLevel secondary_stages = 5;  // Secondary stages this activity contributes to
+  uint32 experience_points = 6;           // Experience points awarded for completion
+  bool repeatable = 7;                    // Whether the activity can be repeated
+  uint32 cooldown_hours = 8;              // Hours before the activity can be repeated
+  map<string, float> attribute_multipliers = 9;  // Multipliers for different user attributes
+}
+
+// Record of a completed activity
+message ActivityCompletion {
+  string completion_id = 1;               // Completion identifier
+  string activity_id = 2;                 // Activity identifier
+  string user_id = 3;                     // User who completed the activity
+  uint64 completion_time_ms = 4;          // When the activity was completed
+  uint32 awarded_experience = 5;          // Experience points awarded
+  float progress_contribution = 6;        // Contribution to stage progress (0.0-1.0)
+  bytes evidence = 7;                     // Evidence of completion
+  repeated string validator_ids = 8;      // Validators of the completion
+}
+
+// Developmental Stage Progression Recommendation
+message StageProgressionRecommendation {
+  string user_id = 1;                     // User identifier
+  DevelopmentalStageLevel current_stage = 2;  // Current developmental stage
+  float current_progress = 3;             // Current progress in stage (0.0-1.0)
+  repeated string recommended_activities = 4;  // Recommended activities to advance
+  repeated string recommended_connections = 5;  // Recommended connections to make
+  float estimated_time_to_next_stage_hours = 6;  // Estimated time to next stage
+  string personalized_guidance = 7;       // Personalized guidance message
+}
+
+// Challenge for advancing within a developmental stage
+message DevelopmentalStageChallenge {
+  string challenge_id = 1;                // Challenge identifier
+  string challenge_name = 2;              // Human-readable name
+  string description = 3;                 // Challenge description
+  DevelopmentalStageLevel target_stage = 4;  // Stage this challenge is for
+  float difficulty = 5;                   // Challenge difficulty (0.0-1.0)
+  uint32 experience_reward = 6;           // Experience reward for completion
+  repeated string prerequisite_challenges = 7;  // Prerequisite challenges
+  repeated string required_skills = 8;    // Skills required for the challenge
+  map<string, float> completion_criteria = 9;  // Criteria for completion
+}
+
+// Developmental Stage Milestone
+message StageMilestone {
+  string milestone_id = 1;                // Milestone identifier
+  string milestone_name = 2;              // Human-readable name
+  string description = 3;                 // Milestone description
+  DevelopmentalStageLevel stage = 4;      // Associated developmental stage
+  float stage_progress_threshold = 5;     // Progress threshold to unlock (0.0-1.0)
+  uint32 experience_reward = 6;           // Experience reward for reaching milestone
+  bool is_stage_transition = 7;           // Whether this milestone marks a stage transition
+  repeated string prerequisite_milestones = 8;  // Prerequisite milestones
+  bytes achievement_proof = 9;            // Proof of achievement
+} 

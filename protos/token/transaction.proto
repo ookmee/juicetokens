@@ -1,0 +1,293 @@
+syntax = "proto3";
+
+package juicetokens.token.transaction;
+
+option go_package = "github.com/juicetokens/protos/token/transaction";
+
+import "token/model.proto";
+
+// Transaction Protocol
+// This file defines the protocol buffers for the transaction protocol,
+// implementing the four-packet transaction model and atomic commitment protocol.
+
+// TransactionState represents the current state of a transaction
+enum TransactionState {
+  TRANSACTION_UNSPECIFIED = 0;
+  INITIATED = 1;
+  PREPARING = 2;
+  PREPARED = 3;
+  COMMITTING = 4;
+  COMMITTED = 5;
+  ABORTING = 6;
+  ABORTED = 7;
+  FAILED = 8;
+}
+
+// Transaction represents a complete token exchange transaction
+message Transaction {
+  // Unique transaction identifier
+  string id = 1;
+  
+  // Transaction state
+  TransactionState state = 2;
+  
+  // Transaction context
+  TransactionContext context = 3;
+  
+  // Sender's exo-pak (tokens sent to receiver)
+  ExoPak sender_exo_pak = 4;
+  
+  // Receiver's exo-pak (tokens sent to sender)
+  ExoPak receiver_exo_pak = 5;
+  
+  // Sender's retro-pak (tokens retained by sender)
+  RetroPak sender_retro_pak = 6;
+  
+  // Receiver's retro-pak (tokens retained by receiver)
+  RetroPak receiver_retro_pak = 7;
+  
+  // Transaction timestamps
+  TransactionTimestamps timestamps = 8;
+  
+  // Transaction proofs
+  TransactionProofs proofs = 9;
+  
+  // Transaction metadata
+  map<string, string> metadata = 10;
+}
+
+// TransactionContext provides context for the transaction
+message TransactionContext {
+  // Sender's public key
+  bytes sender_public_key = 1;
+  
+  // Receiver's public key
+  bytes receiver_public_key = 2;
+  
+  // Transaction type (e.g., "DIRECT", "SPLIT", "MERGE")
+  string transaction_type = 3;
+  
+  // Transaction purpose
+  string purpose = 4;
+  
+  // Transaction amount
+  uint64 amount = 5;
+  
+  // Transaction location
+  juicetokens.token.model.Location location = 6;
+  
+  // Transaction reference
+  juicetokens.token.model.Reference reference = 7;
+  
+  // Transaction constraints
+  TransactionConstraints constraints = 8;
+}
+
+// TransactionConstraints defines constraints for the transaction
+message TransactionConstraints {
+  // Maximum transaction duration in milliseconds
+  uint64 max_duration_ms = 1;
+  
+  // Required minimum balance after transaction
+  uint64 min_balance_after = 2;
+  
+  // Allowed token denominations
+  repeated juicetokens.token.model.DenominationValue allowed_denominations = 3;
+  
+  // Required attestation level
+  uint32 required_attestation_level = 4;
+  
+  // Whether to use WisselToken
+  bool use_wissel_token = 5;
+  
+  // Whether to use AfrondingBuffer
+  bool use_afronding_buffer = 6;
+}
+
+// ExoPak represents tokens sent to the other party
+message ExoPak {
+  // Package identifier
+  string id = 1;
+  
+  // Package status
+  PakStatus status = 2;
+  
+  // Tokens in the package
+  repeated juicetokens.token.model.Token tokens = 3;
+  
+  // Package proof
+  bytes proof = 4;
+  
+  // Package metadata
+  map<string, string> metadata = 5;
+}
+
+// RetroPak represents tokens retained for rollback safety
+message RetroPak {
+  // Package identifier
+  string id = 1;
+  
+  // Package status
+  PakStatus status = 2;
+  
+  // Tokens in the package
+  repeated juicetokens.token.model.Token tokens = 3;
+  
+  // Rollback instructions
+  RollbackInstructions rollback_instructions = 4;
+  
+  // Package proof
+  bytes proof = 5;
+  
+  // Package metadata
+  map<string, string> metadata = 6;
+}
+
+// PakStatus represents the state of a token package
+enum PakStatus {
+  PAK_UNSPECIFIED = 0;
+  CREATED = 1;
+  SENT = 2;
+  RECEIVED = 3;
+  VERIFIED = 4;
+  COMMITTED = 5;
+  ROLLED_BACK = 6;
+  FAILED = 7;
+}
+
+// RollbackInstructions defines how to rollback a transaction
+message RollbackInstructions {
+  // Rollback steps
+  repeated RollbackStep steps = 1;
+  
+  // Rollback timeout in milliseconds
+  uint64 timeout_ms = 2;
+  
+  // Rollback proof
+  bytes proof = 3;
+}
+
+// RollbackStep represents a single step in the rollback process
+message RollbackStep {
+  // Step number
+  uint32 step_number = 1;
+  
+  // Step type (e.g., "RESTORE", "DELETE", "UPDATE")
+  string step_type = 2;
+  
+  // Step data
+  bytes step_data = 3;
+  
+  // Step proof
+  bytes step_proof = 4;
+}
+
+// TransactionTimestamps tracks important transaction timestamps
+message TransactionTimestamps {
+  // Transaction creation timestamp
+  uint64 created_at_ms = 1;
+  
+  // Transaction initiation timestamp
+  uint64 initiated_at_ms = 2;
+  
+  // Transaction preparation timestamp
+  uint64 prepared_at_ms = 3;
+  
+  // Transaction commitment timestamp
+  uint64 committed_at_ms = 4;
+  
+  // Transaction completion timestamp
+  uint64 completed_at_ms = 5;
+  
+  // Transaction timeout timestamp
+  uint64 timeout_at_ms = 6;
+}
+
+// TransactionProofs contains all cryptographic proofs for the transaction
+message TransactionProofs {
+  // Transaction signature
+  bytes transaction_signature = 1;
+  
+  // Sender's commitment proof
+  bytes sender_commitment_proof = 2;
+  
+  // Receiver's commitment proof
+  bytes receiver_commitment_proof = 3;
+  
+  // Atomic commitment proof
+  bytes atomic_commitment_proof = 4;
+  
+  // Zero-knowledge proofs
+  repeated bytes zero_knowledge_proofs = 5;
+}
+
+// TransactionService defines the RPC methods for transaction operations
+service TransactionService {
+  // InitiateTransaction starts a new transaction
+  rpc InitiateTransaction(InitiateTransactionRequest) returns (InitiateTransactionResponse);
+  
+  // PrepareTransaction prepares a transaction for commitment
+  rpc PrepareTransaction(PrepareTransactionRequest) returns (PrepareTransactionResponse);
+  
+  // CommitTransaction commits a prepared transaction
+  rpc CommitTransaction(CommitTransactionRequest) returns (CommitTransactionResponse);
+  
+  // AbortTransaction aborts a transaction
+  rpc AbortTransaction(AbortTransactionRequest) returns (AbortTransactionResponse);
+  
+  // GetTransaction retrieves a transaction by ID
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  
+  // StreamTransactionUpdates streams transaction updates
+  rpc StreamTransactionUpdates(StreamTransactionUpdatesRequest) returns (stream Transaction);
+}
+
+// Request/Response messages for TransactionService
+message InitiateTransactionRequest {
+  TransactionContext context = 1;
+  repeated juicetokens.token.model.Token sender_tokens = 2;
+  repeated juicetokens.token.model.Token receiver_tokens = 3;
+}
+
+message InitiateTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message PrepareTransactionRequest {
+  string transaction_id = 1;
+  bytes sender_commitment_proof = 2;
+}
+
+message PrepareTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message CommitTransactionRequest {
+  string transaction_id = 1;
+  bytes receiver_commitment_proof = 2;
+}
+
+message CommitTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message AbortTransactionRequest {
+  string transaction_id = 1;
+  string reason = 2;
+}
+
+message AbortTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message GetTransactionRequest {
+  string transaction_id = 1;
+}
+
+message GetTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message StreamTransactionUpdatesRequest {
+  string transaction_id = 1;
+} 

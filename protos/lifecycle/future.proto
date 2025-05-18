@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package juicetokens.lifecycle.future;
+
+import "token/model.proto";
+
+// Future Promise Protocol
+message PromiseCreation {
+  string promise_id = 1;  // Unique promise identifier
+  string creator_id = 2;  // Creator identifier
+  string beneficiary_id = 3;  // Beneficiary identifier
+  string promise_description = 4;  // Description of the promise
+  uint64 value_amount = 5;  // Value amount
+  uint64 due_date_ms = 6;  // Due date
+  repeated VerificationRequirement verification_requirements = 7;  // Verification requirements
+  bytes creator_signature = 8;  // Creator's signature
+}
+
+message VerificationRequirement {
+  string requirement_id = 1;  // Requirement identifier
+  string description = 2;  // Description
+  enum RequirementType {
+    ATTESTATION = 0;   // Requires attestation
+    EVIDENCE = 1;      // Requires evidence
+    TIMELOCK = 2;      // Time-based requirement
+    CONDITIONAL = 3;   // Condition-based requirement
+  }
+  RequirementType requirement_type = 3;
+  bytes requirement_parameters = 4;  // Serialized parameters
+  bool optional = 5;  // Whether optional
+  uint32 weight = 6;  // Weight (for partial fulfillment)
+}
+
+message FulfillmentTracking {
+  string promise_id = 1;  // Promise identifier
+  repeated RequirementStatus requirement_statuses = 2;  // Requirement statuses
+  float overall_completion_percentage = 3;  // Overall completion percentage
+  uint64 last_update_ms = 4;  // Last update timestamp
+  enum FulfillmentState {
+    NOT_STARTED = 0;
+    IN_PROGRESS = 1;
+    PARTIALLY_FULFILLED = 2;
+    FULFILLED = 3;
+    DISPUTED = 4;
+    CANCELED = 5;
+  }
+  FulfillmentState state = 5;
+}
+
+message RequirementStatus {
+  string requirement_id = 1;  // Requirement identifier
+  float completion_percentage = 2;  // Completion percentage
+  string status_description = 3;  // Status description
+  repeated string evidence_references = 4;  // Evidence references
+  uint64 last_update_ms = 5;  // Last update timestamp
+}
+
+message PromiseMetadata {
+  string promise_id = 1;  // Promise identifier
+  string category = 2;  // Category
+  string context = 3;  // Context
+  repeated string tags = 4;  // Tags
+  bool public = 5;  // Whether public
+  map<string, string> custom_attributes = 6;  // Custom attributes
+}
+
+// Escrow Mechanisms
+message EscrowCondition {
+  string condition_id = 1;  // Condition identifier
+  string description = 2;  // Description
+  enum ConditionType {
+    TIME_BASED = 0;    // Time-based condition
+    EVENT_BASED = 1;   // Event-based condition
+    MULTI_SIG = 2;     // Multi-signature condition
+    ORACLE_BASED = 3;  // Oracle-based condition
+  }
+  ConditionType condition_type = 3;
+  bytes condition_parameters = 4;  // Serialized parameters
+  bool negated = 5;  // Whether the condition is negated
+}
+
+message MultiSignatureRequirement {
+  string requirement_id = 1;  // Requirement identifier
+  repeated string required_signers = 2;  // Required signers
+  uint32 threshold = 3;  // Threshold (M-of-N)
+  uint32 timeout_hours = 4;  // Timeout in hours
+  bool allow_delegation = 5;  // Whether delegation is allowed
+}
+
+message TimeBasedTrigger {
+  string trigger_id = 1;  // Trigger identifier
+  uint64 trigger_time_ms = 2;  // Trigger time
+  bool release_on_trigger = 3;  // Whether to release on trigger
+  bool recurring = 4;  // Whether recurring
+  uint32 recurrence_interval_hours = 5;  // Recurrence interval
+  uint32 max_recurrences = 6;  // Maximum recurrences
+}
+
+message EscrowStatus {
+  string escrow_id = 1;  // Escrow identifier
+  repeated juicetokens.token.model.TokenId escrowed_tokens = 2;  // Escrowed tokens
+  string depositor_id = 3;  // Depositor identifier
+  string recipient_id = 4;  // Recipient identifier
+  repeated EscrowCondition conditions = 5;  // Conditions
+  enum Status {
+    ACTIVE = 0;      // Active escrow
+    FULFILLED = 1;   // Fulfilled (tokens released)
+    REFUNDED = 2;    // Refunded to depositor
+    DISPUTED = 3;    // In dispute
+    EXPIRED = 4;     // Expired
+  }
+  Status status = 6;
+  uint64 creation_ms = 7;  // Creation timestamp
+  uint64 last_update_ms = 8;  // Last update timestamp
+}
+
+// Communal Pooling System
+message GroupCommitment {
+  string commitment_id = 1;  // Commitment identifier
+  string group_id = 2;  // Group identifier
+  string commitment_purpose = 3;  // Purpose
+  repeated string participant_ids = 4;  // Participants
+  map<string, uint64> contributions = 5;  // Contributions by participant
+  uint64 total_value = 6;  // Total value
+  uint64 creation_ms = 7;  // Creation timestamp
+  uint64 fulfillment_deadline_ms = 8;  // Fulfillment deadline
+}
+
+message RiskDistribution {
+  string distribution_id = 1;  // Distribution identifier
+  string parent_commitment_id = 2;  // Parent commitment
+  map<string, float> risk_weights = 3;  // Risk weights by participant
+  enum RiskStrategy {
+    EQUAL = 0;       // Equal distribution
+    PROPORTIONAL = 1;  // Proportional to contribution
+    CUSTOM = 2;      // Custom distribution
+  }
+  RiskStrategy strategy = 4;
+  bytes distribution_rules = 5;  // Serialized distribution rules
+}
+
+message CollectiveFulfillment {
+  string fulfillment_id = 1;  // Fulfillment identifier
+  string parent_commitment_id = 2;  // Parent commitment
+  repeated string verifier_ids = 3;  // Verifiers
+  uint32 verification_threshold = 4;  // Verification threshold
+  repeated VerificationVote votes = 5;  // Verification votes
+  enum FulfillmentStatus {
+    PENDING = 0;     // Pending verification
+    VERIFIED = 1;    // Verified
+    REJECTED = 2;    // Rejected
+    DISPUTED = 3;    // In dispute
+  }
+  FulfillmentStatus status = 6;
+  uint64 last_update_ms = 7;  // Last update timestamp
+}
+
+message VerificationVote {
+  string verifier_id = 1;  // Verifier identifier
+  bool approved = 2;  // Whether approved
+  string comment = 3;  // Comment
+  uint64 vote_timestamp_ms = 4;  // Vote timestamp
+  bytes signature = 5;  // Signature
+}
+
+message PoolMetadata {
+  string pool_id = 1;  // Pool identifier
+  string name = 2;  // Name
+  string description = 3;  // Description
+  string category = 4;  // Category
+  repeated string tags = 5;  // Tags
+  bool public = 6;  // Whether public
+  map<string, string> custom_attributes = 7;  // Custom attributes
+} 

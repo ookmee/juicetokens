@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package juicetokens.transport.message;
+
+option go_package = "github.com/juicetokens/protos/transport/message";
+
+// MessageFrame is the container structure for all protocol messages
+message MessageFrame {
+  string frame_id = 1;               // Unique identifier for this frame
+  FrameType type = 2;                // Type of frame
+  bytes payload = 3;                 // Message payload
+  map<string, string> headers = 4;   // Message headers
+  uint64 timestamp_ms = 5;           // Timestamp in milliseconds
+  CompressionType compression = 6;   // Compression algorithm used
+  repeated ChunkInfo chunks = 7;     // Chunking information (if fragmented)
+  uint32 protocol_version = 8;       // Protocol version
+  uint32 sequence_number = 9;        // Sequence number for ordering
+}
+
+// FrameType represents different types of frames
+enum FrameType {
+  DATA = 0;           // Regular data frame
+  CONTROL = 1;        // Control frame
+  HEARTBEAT = 2;      // Heartbeat frame
+  ERROR = 3;          // Error frame
+  ACKNOWLEDGMENT = 4; // Acknowledgment frame
+}
+
+// CompressionType represents available compression algorithms
+enum CompressionType {
+  NONE = 0;      // No compression
+  GZIP = 1;      // Gzip compression
+  LZ4 = 2;       // LZ4 compression
+  ZSTD = 3;      // Zstandard compression
+}
+
+// ChunkInfo manages message fragmentation and reassembly
+message ChunkInfo {
+  uint32 chunk_index = 1;     // Index of this chunk
+  uint32 total_chunks = 2;    // Total number of chunks
+  uint32 chunk_size = 3;      // Size of this chunk in bytes
+  bytes chunk_hash = 4;       // Hash of chunk data for verification
+  bytes complete_hash = 5;    // Hash of complete message (in first chunk)
+}
+
+// Acknowledgment confirms message receipt
+message Acknowledgment {
+  string frame_id = 1;           // ID of the acknowledged frame
+  bool success = 2;              // Whether receipt was successful
+  string error_message = 3;      // Error message if not successful
+  uint64 timestamp_ms = 4;       // Timestamp in milliseconds
+  repeated uint32 received_chunks = 5;  // Chunks received (for partial acks)
+}
+
+// SessionResumptionToken enables interrupted sessions to resume
+message SessionResumptionToken {
+  string token = 1;                   // Unique token identifier
+  uint64 expires_at_ms = 2;           // Expiration timestamp
+  map<string, string> session_state = 3;  // Session state
+  string session_id = 4;              // Session identifier
+  uint32 last_sequence = 5;           // Last successfully processed sequence
+  bytes signature = 6;                // Signature for verification
+}
+
+// RecoveryRequest requests retransmission of data
+message RecoveryRequest {
+  string frame_id = 1;               // ID of the frame to recover
+  repeated uint32 missing_chunks = 2;  // Indices of missing chunks
+  uint64 timestamp_ms = 3;           // Timestamp in milliseconds
+  string session_id = 4;             // Session identifier
+  SessionResumptionToken resumption_token = 5;  // Optional resumption token
+}
+
+// TransportError describes communication errors
+message TransportError {
+  enum ErrorType {
+    UNKNOWN = 0;           // Unknown error
+    TIMEOUT = 1;           // Timeout error
+    CORRUPTION = 2;        // Data corruption
+    CONNECTION_LOST = 3;   // Connection lost
+    PROTOCOL_ERROR = 4;    // Protocol error
+    RESOURCE_EXHAUSTED = 5;  // Resource exhaustion
+    SECURITY = 6;          // Security error
+  }
+  ErrorType type = 1;         // Type of error
+  string message = 2;         // Error message
+  string frame_id = 3;        // Related frame ID
+  uint64 timestamp_ms = 4;    // Timestamp in milliseconds
+  map<string, string> context = 5;  // Error context
+  bool recoverable = 6;       // Whether the error is recoverable
+  string recovery_hint = 7;   // Hint for recovery
+}
+
+// Message represents a complete application message
+message Message {
+  string message_id = 1;              // Unique message identifier
+  bytes content = 2;                  // Message content
+  map<string, string> metadata = 3;   // Message metadata
+  uint64 created_at_ms = 4;           // Creation timestamp
+  string sender_id = 5;               // Sender identifier
+  string recipient_id = 6;            // Recipient identifier
+  uint32 ttl_seconds = 7;             // Time-to-live in seconds
+  Priority priority = 8;              // Message priority
+}
+
+// Priority represents message processing priority
+enum Priority {
+  NORMAL = 0;    // Normal priority
+  HIGH = 1;      // High priority
+  CRITICAL = 2;  // Critical priority
+  LOW = 3;       // Low priority
+}
+
+// MessageService defines the RPC methods for message operations
+service MessageService {
+  // SendFrame sends a message frame
+  rpc SendFrame(SendFrameRequest) returns (SendFrameResponse);
+  
+  // ReceiveFrame receives a message frame
+  rpc ReceiveFrame(ReceiveFrameRequest) returns (ReceiveFrameResponse);
+  
+  // AcknowledgeFrame acknowledges receipt of a frame
+  rpc AcknowledgeFrame(AcknowledgeFrameRequest) returns (AcknowledgeFrameResponse);
+  
+  // RequestRecovery requests retransmission of lost data
+  rpc RequestRecovery(RequestRecoveryRequest) returns (RequestRecoveryResponse);
+  
+  // StreamFrames streams message frames
+  rpc StreamFrames(StreamFramesRequest) returns (stream MessageFrame);
+}
+
+// Request/Response messages for MessageService
+message SendFrameRequest {
+  MessageFrame frame = 1;
+  bool require_ack = 2;       // Whether acknowledgment is required
+  uint32 timeout_ms = 3;      // Timeout in milliseconds
+}
+
+message SendFrameResponse {
+  bool success = 1;
+  string error_message = 2;
+  string frame_id = 3;        // ID of the sent frame
+}
+
+message ReceiveFrameRequest {
+  uint32 timeout_ms = 1;      // Timeout in milliseconds
+  string session_id = 2;      // Session identifier
+}
+
+message ReceiveFrameResponse {
+  MessageFrame frame = 1;
+}
+
+message AcknowledgeFrameRequest {
+  string frame_id = 1;
+  bool success = 2;
+  string error_message = 3;
+  repeated uint32 received_chunks = 4;  // For partial acknowledgments
+}
+
+message AcknowledgeFrameResponse {
+  bool success = 1;
+}
+
+message RequestRecoveryRequest {
+  string frame_id = 1;
+  repeated uint32 missing_chunks = 2;
+  string session_id = 3;
+}
+
+message RequestRecoveryResponse {
+  repeated MessageFrame recovered_frames = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+message StreamFramesRequest {
+  uint32 max_frames = 1;      // Maximum number of frames to receive
+  uint32 timeout_ms = 2;      // Timeout in milliseconds
+  string session_id = 3;      // Session identifier
+} 

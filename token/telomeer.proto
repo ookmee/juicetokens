@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package juicetokens.token.telomeer;
+
+import "token/model.proto";
+
+/**
+ * Telomeer Management
+ * 
+ * A Telomeer is the ownership tracking mechanism in JuiceTokens, implemented as a
+ * "self-composting tail" that maintains a cryptographic record of ownership without
+ * indefinite growth. This design allows for verifiable ownership history while
+ * preventing the history chain from growing unbounded over time.
+ */
+ 
+// Telomeer tracks token ownership and maintains a compressed history
+message Telomeer {
+  string current_owner = 1;  // Public key of current owner
+  string hash_previous_owner = 2;  // Hash of previous owner's public key
+  repeated string hash_history = 3;  // Compressed history chain
+  
+  // The Telomeer works as a "self-composting tail" by:
+  // 1. Explicitly storing the current owner (for immediate verification)
+  // 2. Storing a hash of the previous owner (for one-step back verification)
+  // 3. Maintaining a compressed history chain that is periodically pruned
+  //    while preserving cryptographic verification capability
+  // This approach provides ownership verification without unbounded growth
+}
+
+// OwnershipProof provides cryptographic proof of token ownership
+message OwnershipProof {
+  juicetokens.token.model.TokenId token_id = 1;  // Token ID
+  bytes owner_signature = 2;  // Signature by the owner
+  bytes tee_attestation = 3;  // TEE attestation (if available)
+  uint64 timestamp_ms = 4;  // Timestamp of the proof
+}
+
+// TelomeerTransformation represents an ownership change for a token
+message TelomeerTransformation {
+  juicetokens.token.model.TokenId token_id = 1;  // Token ID
+  string previous_owner = 2;  // Current owner (will become previous)
+  string new_owner = 3;  // New owner
+  string transaction_id = 4;  // Associated transaction ID
+  uint64 timestamp_ms = 5;  // Timestamp of transformation
+  TransformationStatus status = 6;  // Status of the transformation
+  bytes transformation_signature = 7;  // Cryptographic signature
+}
+
+// TransformationStatus defines the state of a telomeer transformation
+enum TransformationStatus {
+  PROVISIONAL = 0;  // Provisional transformation (not finalized)
+  FINALIZED = 1;    // Finalized transformation (permanent change)
+  REVERTED = 2;     // Reverted transformation (canceled/rolled back)
+}
+
+// TransformationRequest initiates an ownership change
+message TransformationRequest {
+  juicetokens.token.model.TokenId token_id = 1;  // Token ID
+  string new_owner = 2;  // New owner public key
+  string transaction_id = 3;  // Transaction ID
+  uint64 timestamp_ms = 4;  // Timestamp of request
+}
+
+// TransformationSignature is a secure signature for ownership changes
+message TransformationSignature {
+  bytes signature = 1;  // TEE-generated signature
+  bytes proof = 2;  // Proof of TEE authenticity
+  uint64 timestamp_ms = 3;  // Timestamp of signature
+  string tee_identity = 4;  // Identity of the TEE
+}
+
+// HashHistory provides a complete record of token ownership hashes
+message HashHistory {
+  juicetokens.token.model.TokenId token_id = 1;  // Token ID
+  repeated HistoryEntry entries = 2;  // History entries
+}
+
+// HistoryEntry represents a single ownership entry in the history
+message HistoryEntry {
+  string owner_hash = 1;  // Hash of owner public key
+  uint64 timestamp_ms = 2;  // Timestamp of ownership
+} 

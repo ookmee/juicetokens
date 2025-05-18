@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { StorageFactory, StorageConfig } from './storage/TokenStorage';
 import { promisify } from 'util';
 import path from 'path';
+import { isValidDenomination, Logger } from '@juicetokens/common';
 
 const app = express();
 app.use(express.json());
@@ -55,8 +56,23 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
+// Create a simple logger implementation
+const logger: Logger = {
+  debug: (message: string, ...args: any[]) => console.debug(`[DEBUG] ${message}`, ...args),
+  info: (message: string, ...args: any[]) => console.info(`[INFO] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
+  error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
+};
+
+// Simple startup message
+logger.info('JuiceTokens Protocol Implementation');
+logger.info(`Is 5 a valid denomination? ${isValidDenomination(5)}`);
+logger.info(`Is 3 a valid denomination? ${isValidDenomination(3)}`);
+
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4242;
+logger.info(`Server would start on port ${PORT} (placeholder)`);
+
 app.listen(PORT, async () => {
   await initializeStorage();
   console.log(`Server running on port ${PORT}`);

@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package juicetokens.foundation.time;
+
+// Time Source Management
+message TimeSource {
+  enum SourceType {
+    SYSTEM = 0;    // System clock
+    NTP = 1;       // Network Time Protocol
+    GNSS = 2;      // Global Navigation Satellite System
+    RADIO = 3;     // Radio time signals
+    CONSENSUS = 4; // Time consensus from peers
+    TSA = 5;       // Time Stamping Authority
+    BLOCKCHAIN = 6; // Blockchain-based time
+  }
+  SourceType source_type = 1;
+  int64 timestamp_ms = 2;  // Milliseconds since Unix epoch
+  uint32 confidence_score = 3;  // 0-100 confidence score
+  string source_identifier = 4;  // Unique identifier for this source
+  bool available = 5;  // Whether this source is currently available
+  int64 last_sync_ms = 6;  // When this source was last synchronized
+}
+
+// Time Integrity Verification
+message TimeIntegrityRequest {
+  repeated string time_source_types = 1;  // Requested time source types
+  bool require_high_confidence = 2;  // Whether high confidence is required
+  uint32 minimum_sources = 3;  // Minimum number of sources required
+  bool check_for_spoofing = 4;  // Whether to check for time spoofing
+}
+
+message TimeIntegrityResponse {
+  int64 timestamp_ms = 1;  // Current timestamp in milliseconds
+  uint32 confidence_score = 2;  // 0-100 confidence score
+  repeated TimeSourceStatus sources = 3;  // Status of all time sources
+  bool integrity_verified = 4;  // Whether time integrity is verified
+  SpoofingDetectionResult spoofing_detection = 5;  // Results of spoofing detection
+  bool suitable_for_transactions = 6;  // Whether suitable for transactions
+}
+
+message TimeSourceStatus {
+  string source_type = 1;  // Type of time source
+  bool available = 2;  // Whether the source is available
+  int64 reported_time_ms = 3;  // Time reported by this source
+  uint32 confidence_score = 4;  // 0-100 confidence score
+  int64 deviation_ms = 5;  // Deviation from consensus in milliseconds
+  string error_message = 6;  // Error message if unavailable
+  bool contributing_to_consensus = 7;  // Whether contributing to consensus
+}
+
+// Transaction Time Verification
+message TransactionTimeVerification {
+  string transaction_id = 1;  // Transaction identifier
+  int64 timestamp_ms = 2;  // Timestamp in milliseconds
+  uint32 confidence_score = 3;  // 0-100 confidence score
+  bool meets_finalization_requirements = 4;  // Whether requirements are met
+  string verification_failure_reason = 5;  // Reason for failure if any
+  enum TimeStatus {
+    VERIFIED = 0;    // Normal operation with GPS/network time (millisecond differences)
+    CONSENSUS = 1;   // Primary sources unavailable, differences < 5 seconds 
+    INADEQUATE = 2;  // Differences > 5 seconds, requires synchronization
+    COMPROMISED = 3; // Evidence of tampering or spoofing detected
+  }
+  TimeStatus time_status = 6;  // Current time status
+  TimestampProof proof = 7;  // Proof of timestamp validity
+}
+
+message TransactionTimeRequirement {
+  uint32 min_confidence_score = 1;  // Minimum confidence score required
+  repeated string required_source_types = 2;  // Required time source types
+  uint32 max_allowed_deviation_ms = 3;  // Maximum allowed deviation
+  bool require_timestamp_proof = 4;  // Whether timestamp proof is required
+  TimeStatus minimum_time_status = 5;  // Minimum acceptable time status
+}
+
+message TimestampProof {
+  int64 timestamp_ms = 1;  // Timestamp in milliseconds
+  bytes signature = 2;  // Cryptographic signature of the timestamp
+  string signing_authority = 3;  // Who signed the timestamp
+  bytes additional_proof = 4;  // Additional proof data (e.g., TSA response)
+  string proof_type = 5;  // Type of proof (e.g., "TSA", "TEE", "BLOCKCHAIN")
+  int64 creation_ms = 6;  // When the proof was created
+  int64 expiry_ms = 7;  // When the proof expires
+}
+
+// Spoofing Detection
+message SpoofingDetectionResult {
+  bool spoofing_detected = 1;  // Whether time spoofing was detected
+  string detection_reason = 2;  // Reason for detection
+  int64 expected_time_range_min_ms = 3;  // Expected minimum time
+  int64 expected_time_range_max_ms = 4;  // Expected maximum time
+  int64 detected_time_ms = 5;  // Detected time
+  uint32 confidence_in_detection = 6;  // Confidence in detection (0-100)
+  repeated string affected_sources = 7;  // Affected time sources
+  repeated SpoofingSignature signatures = 8;  // Detected spoofing signatures
+}
+
+message SpoofingSignature {
+  enum SignatureType {
+    JUMP = 0;         // Sudden time jump
+    DRIFT = 1;        // Abnormal drift rate
+    INCONSISTENCY = 2; // Inconsistency between sources
+    REPEATED = 3;     // Repeated timestamps
+    PATTERN = 4;      // Suspicious pattern
+  }
+  SignatureType signature_type = 1;
+  uint32 severity = 2;  // Severity (0-100)
+  string description = 3;  // Human-readable description
+  bytes evidence = 4;  // Evidence data
+}
+
+// Time Consensus Management
+message TimeConsensus {
+  repeated TimeSource sources = 1;  // All available time sources
+  int64 consensus_timestamp_ms = 2;  // Agreed-upon timestamp in milliseconds
+  uint32 consensus_confidence = 3;  // Overall confidence in the consensus (0-100)
+  string algorithm = 4;  // Algorithm used for consensus
+  uint32 contributing_sources = 5;  // Number of contributing sources
+  float max_deviation_ms = 6;  // Maximum deviation from consensus
+  int64 calculation_timestamp_ms = 7;  // When consensus was calculated
+}
+
+// Secure Time Synchronization
+message TimeSyncRequest {
+  string requester_id = 1;  // Requester identifier
+  int64 local_time_ms = 2;  // Local time of requester
+  repeated string preferred_sources = 3;  // Preferred time sources
+  bool include_proof = 4;  // Whether to include proof
+}
+
+message TimeSyncResponse {
+  int64 server_time_ms = 1;  // Server time
+  int64 client_time_ms = 2;  // Echo of client's time
+  int64 round_trip_time_ms = 3;  // Estimated round-trip time
+  int64 estimated_offset_ms = 4;  // Estimated client-server offset
+  TimestampProof proof = 5;  // Optional timestamp proof
+  uint32 confidence_score = 6;  // Confidence in the synchronization
+  repeated TimeSourceStatus available_sources = 7;  // Available time sources
+}
+
+// Time-based Security
+message TimeBasedSecurityToken {
+  int64 issuance_time_ms = 1;  // When token was issued
+  int64 expiry_time_ms = 2;  // When token expires
+  string issuer_id = 3;  // Issuer identifier
+  string subject_id = 4;  // Subject identifier
+  bytes nonce = 5;  // Unique nonce
+  bytes signature = 6;  // Cryptographic signature
+  TimestampProof timestamp_proof = 7;  // Proof of timestamp validity
+}
+
+// Time Audit Trail
+message TimeAuditEntry {
+  string entry_id = 1;  // Entry identifier
+  string component = 2;  // System component
+  string action = 3;  // Action performed
+  int64 timestamp_ms = 4;  // Timestamp
+  uint32 confidence_score = 5;  // Confidence score
+  repeated string time_sources = 6;  // Time sources used
+  bytes signature = 7;  // Signature for integrity
+  string user_id = 8;  // User who performed the action
+} 

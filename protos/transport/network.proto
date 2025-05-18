@@ -1,0 +1,252 @@
+syntax = "proto3";
+
+package juicetokens.transport.network;
+
+option go_package = "github.com/juicetokens/protos/transport/network";
+
+// Network Topology Management
+
+// ===============================
+// Peer Discovery Module
+// ===============================
+
+// PeerDiscoveryRequest initiates peer discovery
+message PeerDiscoveryRequest {
+  enum DiscoveryType {
+    ACTIVE = 0;    // Actively search for peers
+    PASSIVE = 1;   // Listen for peer announcements
+    HYBRID = 2;    // Both active and passive
+  }
+  DiscoveryType type = 1;
+  uint32 timeout_ms = 2;             // Discovery timeout
+  repeated string known_peers = 3;    // Already known peers
+  map<string, string> filters = 4;    // Discovery filters
+  bool include_capabilities = 5;      // Include peer capabilities in response
+  uint32 max_results = 6;             // Maximum number of results
+}
+
+// PeerInfo contains information about discovered peers
+message PeerInfo {
+  string peer_id = 1;                     // Unique peer identifier
+  repeated string addresses = 2;          // Peer addresses
+  map<string, string> capabilities = 3;   // Peer capabilities
+  uint64 last_seen_ms = 4;                // Last seen timestamp
+  uint32 reliability_score = 5;           // 0-100 reliability score
+  repeated string supported_protocols = 6;  // Supported protocols
+  string geohash = 7;                     // Geolocation hash
+  uint32 version = 8;                     // Protocol version
+}
+
+// BootstrapNode represents initial connection points
+message BootstrapNode {
+  string node_id = 1;                   // Node identifier
+  repeated string addresses = 2;        // Node addresses
+  uint32 priority = 3;                  // Node priority (lower is higher)
+  bool is_trusted = 4;                  // Is this a trusted node
+  map<string, string> metadata = 5;     // Node metadata
+  uint64 last_verified_ms = 6;          // Last verification timestamp
+}
+
+// ServiceAdvertisement announces available services
+message ServiceAdvertisement {
+  string service_id = 1;                // Service identifier
+  string service_type = 2;              // Service type
+  repeated string endpoints = 3;        // Service endpoints
+  map<string, string> capabilities = 4;  // Service capabilities
+  uint64 expires_at_ms = 5;            // Expiration timestamp
+  string peer_id = 6;                  // Advertising peer
+  bytes signature = 7;                 // Advertisement signature
+}
+
+// ===============================
+// Mesh Network Formation
+// ===============================
+
+// MeshConfiguration defines mesh network parameters
+message MeshConfiguration {
+  uint32 max_peers = 1;                   // Maximum number of peers
+  uint32 min_peers = 2;                   // Minimum number of peers
+  uint32 heartbeat_interval_ms = 3;       // Heartbeat interval
+  uint32 connection_timeout_ms = 4;       // Connection timeout
+  repeated string bootstrap_nodes = 5;    // Bootstrap nodes
+  map<string, string> parameters = 6;     // Additional parameters
+  bool enable_store_and_forward = 7;      // Enable store and forward
+  uint32 replication_factor = 8;          // Replication factor for data
+}
+
+// RoutingTable maintains known routes to peers
+message RoutingTable {
+  repeated RouteEntry routes = 1;         // Routes
+  uint64 last_updated_ms = 2;             // Last update timestamp
+  uint32 version = 3;                     // Table version
+  string local_peer_id = 4;               // Local peer ID
+}
+
+// RouteEntry represents a route to a peer
+message RouteEntry {
+  string destination_peer_id = 1;         // Destination peer ID
+  string next_hop_peer_id = 2;            // Next hop peer ID
+  uint32 hop_count = 3;                   // Number of hops
+  uint32 reliability_score = 4;           // 0-100 reliability score
+  uint64 last_used_ms = 5;                // Last used timestamp
+  uint32 latency_ms = 6;                  // Route latency
+}
+
+// NetworkHealthMetrics contains network performance indicators
+message NetworkHealthMetrics {
+  uint32 connected_peers = 1;             // Number of connected peers
+  uint32 active_connections = 2;          // Number of active connections
+  uint32 message_success_rate = 3;        // 0-100 success rate
+  uint32 average_latency_ms = 4;          // Average latency
+  map<string, uint32> peer_metrics = 5;   // Per-peer metrics
+  uint64 uptime_seconds = 6;              // Network uptime
+  uint32 bandwidth_usage_bytes = 7;       // Bandwidth usage
+}
+
+// StoreAndForwardRequest handles offline message delivery
+message StoreAndForwardRequest {
+  string message_id = 1;                  // Message identifier
+  string destination_peer_id = 2;         // Destination peer ID
+  bytes message_data = 3;                 // Message data
+  uint64 expires_at_ms = 4;               // Expiration timestamp
+  uint32 max_retries = 5;                 // Maximum retries
+  uint32 priority = 6;                    // Message priority
+  string original_sender_id = 7;          // Original sender ID
+}
+
+// ===============================
+// Connection Management
+// ===============================
+
+// ConnectionRequest represents a request to establish a connection
+message ConnectionRequest {
+  string connection_type = 1;             // Connection type
+  map<string, bytes> parameters = 2;      // Connection parameters
+  map<string, string> constraints = 3;    // Connection constraints
+  string peer_id = 4;                     // Target peer ID
+  QualityOfService qos = 5;               // Quality of service
+}
+
+// ConnectionState represents the state of a connection
+message ConnectionState {
+  string connection_id = 1;               // Connection identifier
+  enum Status {
+    INITIALIZING = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+    DISCONNECTING = 3;
+    DISCONNECTED = 4;
+    ERROR = 5;
+  }
+  Status status = 2;                      // Connection status
+  uint32 quality = 3;                     // 0-100 connection quality
+  map<string, uint32> metrics = 4;        // Connection metrics
+  map<string, string> metadata = 5;       // Connection metadata
+  string error_message = 6;               // Error message if status is ERROR
+}
+
+// TransportNegotiation represents the negotiation of transport parameters
+message TransportNegotiation {
+  repeated string protocols = 1;          // Supported protocols
+  map<string, bytes> parameters = 2;      // Protocol parameters
+  map<string, string> constraints = 3;    // Protocol constraints
+  string preferred_protocol = 4;          // Preferred protocol
+}
+
+// QualityOfService represents connection performance requirements
+message QualityOfService {
+  uint64 min_bandwidth = 1;               // Minimum bandwidth (bytes/s)
+  uint32 max_latency = 2;                 // Maximum latency (ms)
+  uint32 max_packet_loss = 3;             // Maximum packet loss (%)
+  map<string, string> requirements = 4;   // Additional requirements
+  uint32 priority = 5;                    // Connection priority
+}
+
+// ===============================
+// Network Service
+// ===============================
+
+// NetworkService defines the RPC methods for network operations
+service NetworkService {
+  // DiscoverPeers initiates peer discovery
+  rpc DiscoverPeers(PeerDiscoveryRequest) returns (stream PeerInfo);
+  
+  // GetMeshStatus retrieves the current mesh network status
+  rpc GetMeshStatus(GetMeshStatusRequest) returns (GetMeshStatusResponse);
+  
+  // UpdateRoutingTable updates the routing information
+  rpc UpdateRoutingTable(UpdateRoutingTableRequest) returns (UpdateRoutingTableResponse);
+  
+  // GetNetworkHealth retrieves network health metrics
+  rpc GetNetworkHealth(GetNetworkHealthRequest) returns (GetNetworkHealthResponse);
+  
+  // StoreAndForwardMessage stores a message for later delivery
+  rpc StoreAndForwardMessage(StoreAndForwardRequest) returns (StoreAndForwardResponse);
+  
+  // EstablishConnection establishes a connection to a peer
+  rpc EstablishConnection(ConnectionRequest) returns (ConnectionState);
+  
+  // GetConnectionState retrieves the state of a connection
+  rpc GetConnectionState(GetConnectionStateRequest) returns (ConnectionState);
+  
+  // CloseConnection closes a connection
+  rpc CloseConnection(CloseConnectionRequest) returns (CloseConnectionResponse);
+}
+
+// Request/Response messages for NetworkService
+message GetMeshStatusRequest {
+  bool include_metrics = 1;         // Include metrics in response
+  bool include_routing_table = 2;   // Include routing table in response
+}
+
+message GetMeshStatusResponse {
+  NetworkHealthMetrics metrics = 1;
+  RoutingTable routing_table = 2;
+  repeated PeerInfo connected_peers = 3;
+  MeshConfiguration configuration = 4;
+}
+
+message UpdateRoutingTableRequest {
+  repeated RouteEntry new_routes = 1;  // New routes to add
+  bool force_update = 2;               // Force update
+  uint32 version = 3;                  // Expected version
+}
+
+message UpdateRoutingTableResponse {
+  bool success = 1;
+  uint32 updated_routes = 2;
+  string error_message = 3;
+  uint32 new_version = 4;
+}
+
+message GetNetworkHealthRequest {
+  bool detailed_metrics = 1;          // Include detailed metrics
+  repeated string target_peers = 2;   // Target peers to include
+}
+
+message GetNetworkHealthResponse {
+  NetworkHealthMetrics metrics = 1;
+  bool healthy = 2;                   // Whether the network is healthy
+  string status_message = 3;          // Status message
+}
+
+message StoreAndForwardResponse {
+  bool success = 1;
+  string error_message = 2;
+  string storage_id = 3;              // Storage identifier
+  uint64 expiry_time_ms = 4;          // When the message will expire
+}
+
+message GetConnectionStateRequest {
+  string connection_id = 1;
+}
+
+message CloseConnectionRequest {
+  string connection_id = 1;
+  bool force = 2;                     // Force close
+}
+
+message CloseConnectionResponse {
+  bool success = 1;
+  string error_message = 2;
+} 

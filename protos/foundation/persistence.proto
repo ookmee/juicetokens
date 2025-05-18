@@ -1,0 +1,289 @@
+syntax = "proto3";
+
+package juicetokens.foundation.persistence;
+
+import "token/model.proto";  // For TokenId references
+
+option go_package = "github.com/juicetokens/protos/foundation/persistence";
+
+// Persistence Management Layer
+// This file defines the protocol buffers for the persistence management layer,
+// which provides unified interfaces for data storage and synchronization across
+// different platforms and implementations.
+
+// Local Storage Module
+// Provides interfaces for local token storage and management
+
+// TokenStore represents a collection of tokens in local storage
+message TokenStore {
+  repeated juicetokens.token.model.Token tokens = 1;  // Collection of tokens
+  map<string, bytes> metadata = 2;  // Arbitrary metadata
+  uint64 last_updated_ms = 3;  // Last update timestamp
+}
+
+// TokenEntry represents a single token in storage
+message TokenEntry {
+  // Token identifier
+  string token_id = 1;
+  
+  // Token data
+  bytes token_data = 2;
+  
+  // Last modified timestamp
+  uint64 last_modified = 3;
+  
+  // Entry metadata
+  map<string, string> metadata = 4;
+}
+
+// StorageOperation represents a request to perform a storage operation
+message StorageOperation {
+  enum OperationType {
+    SAVE = 0;  // Save token(s)
+    LOAD = 1;  // Load token(s)
+    DELETE = 2;  // Delete token(s)
+    UPDATE = 3;  // Update token(s)
+    QUERY = 4;  // Query token(s)
+  }
+  OperationType operation_type = 1;
+  repeated juicetokens.token.model.TokenId token_ids = 2;  // Token IDs to operate on
+  repeated juicetokens.token.model.Token tokens = 3;  // Tokens to save/update
+  string query = 4;  // Query string for QUERY operations
+}
+
+// StorageResult represents the result of a storage operation
+message StorageResult {
+  bool success = 1;  // Whether the operation succeeded
+  repeated juicetokens.token.model.Token tokens = 2;  // Retrieved tokens
+  string error_message = 3;  // Error message if operation failed
+  uint32 affected_count = 4;  // Number of tokens affected
+}
+
+// StorageCapacity represents the capacity information of a storage system
+message StorageCapacity {
+  // Total capacity in bytes
+  uint64 total_capacity = 1;
+  
+  // Used capacity in bytes
+  uint64 used_capacity = 2;
+  
+  // Available capacity in bytes
+  uint64 available_capacity = 3;
+  
+  // Capacity metadata
+  map<string, string> metadata = 4;
+}
+
+// Distributed Hash Table Interface
+// Provides interfaces for distributed content-addressable storage
+
+// DHTEntry represents an entry in the distributed hash table with personal chain functionality
+message DHTEntry {
+  bytes key = 1;  // DHT key (likely a hash)
+  bytes value = 2;  // Stored value
+  uint64 timestamp_ms = 3;  // When the entry was created/updated
+  uint32 ttl_seconds = 4;  // Time-to-live in seconds
+  string s2_cell_id = 5;  // Geospatial index for sharding
+  bytes previous_entry_hash = 6;  // Hash of user's previous DHT entry
+  bytes signature = 7;  // User signature of this entry
+  uint64 sequence_number = 8;  // Sequence number in user's personal chain
+  string entry_type = 9;  // Type of entry (token, attestation, sync, etc.)
+  string user_id = 10;  // User identifier who created this entry
+  
+  // The previous_entry_hash, signature, and sequence_number form the user's
+  // personal chain of DHT contributions, creating a verifiable history
+  // that serves as a source of truth for tokens, attestations, and activity
+}
+
+// DHTQuery represents a request to query the DHT
+message DHTQuery {
+  bytes key = 1;  // Key to query
+  bool include_metadata = 2;  // Whether to include metadata
+  string s2_cell_id = 3;  // Optional geospatial filter
+  string user_id = 4;  // Optional filter by user ID (personal chain)
+  string entry_type = 5;  // Optional filter by entry type
+}
+
+// DHTQueryResult represents the result of a DHT query
+message DHTQueryResult {
+  bool found = 1;  // Whether the key was found
+  bytes value = 2;  // Retrieved value
+  uint64 timestamp_ms = 3;  // When the entry was created/updated
+  uint32 remaining_ttl_seconds = 4;  // Remaining time-to-live
+}
+
+// S2CellReference represents a geospatial index for DHT sharding
+message S2CellReference {
+  string cell_id = 1;  // S2 cell identifier
+  uint32 level = 2;  // Cell level (precision)
+  double lat = 3;  // Latitude of cell center
+  double lng = 4;  // Longitude of cell center
+}
+
+// Synchronization Primitives
+// Provides interfaces for data synchronization across distributed components
+
+// SyncVectorClock is used for creating fuzzy memberships to prioritize
+// relevant data during synchronization. It is entirely separate from
+// VectorClock used in token transactions.
+message SyncVectorClock {
+  map<string, uint64> clock_values = 1;  // Node ID to logical clock value
+  uint64 timestamp_ms = 2;  // Timestamp when the clock was updated
+  string originator_id = 3;  // ID of the node that originated this clock
+}
+
+// DenominationVectorClock is used specifically for token denomination distribution
+message DenominationVectorClock {
+  map<uint32, uint32> denomination_status = 1;  // Denomination value to status mapping
+  // Key: Denomination value (1, 2, 5, 10, 20, 50, 100, 200, 500)
+  // Value: Status code using 2-bit encoding:
+  //   00 (0) = Lack (shortage)
+  //   01 (1) = Slightly wanting
+  //   10 (2) = Good (optimal)
+  //   11 (3) = Excess (abundance)
+  string user_id = 2;  // User identifier
+  uint64 timestamp_ms = 3;  // When the clock was updated
+}
+
+// ConflictResolutionRequest represents a request to resolve data conflicts
+message ConflictResolutionRequest {
+  juicetokens.token.model.Token local_token = 1;  // Local version of token
+  juicetokens.token.model.Token remote_token = 2;  // Remote version of token
+  bool force_local = 3;  // Force local version if true
+  bool force_remote = 4;  // Force remote version if true
+}
+
+// MerkleDifference represents differences between data sets
+message MerkleDifference {
+  bytes merkle_root = 1;  // Root hash of the Merkle tree
+  repeated bytes missing_hashes = 2;  // Hashes that are missing
+  map<string, bytes> hash_to_node_map = 3;  // Map from hash to node data
+}
+
+// SynchronizationSession represents a sync operation between peers
+message SynchronizationSession {
+  string session_id = 1;  // Unique session identifier
+  uint64 started_ms = 2;  // When the session started
+  uint64 last_activity_ms = 3;  // Last activity timestamp
+  enum SessionState {
+    INITIALIZING = 0;
+    COMPARING = 1;
+    TRANSFERRING = 2;
+    RESOLVING_CONFLICTS = 3;
+    FINALIZING = 4;
+    COMPLETED = 5;
+    FAILED = 6;
+  }
+  SessionState state = 4;
+  uint32 progress_percent = 5;  // Progress percentage (0-100)
+  string peer_id = 6;  // Identifier of the peer
+}
+
+// Personal Chain Management
+message PersonalChainInfo {
+  string user_id = 1;  // User identifier
+  bytes latest_entry_hash = 2;  // Hash of the latest entry
+  uint64 latest_sequence_number = 3;  // Latest sequence number
+  uint64 chain_start_timestamp_ms = 4;  // When the chain started
+  uint64 last_update_timestamp_ms = 5;  // Last update timestamp
+  uint32 total_entries = 6;  // Total number of entries
+  bytes chain_root_signature = 7;  // Signature of the chain root for verification
+  repeated string designated_backup_peers = 8;  // Peers designated for redundancy
+  string backup_medium_info = 9;  // Information about user backup medium
+}
+
+// PersonalLedger represents the user's personal ledger of activity
+message PersonalLedger {
+  string user_id = 1;  // User identifier
+  repeated TokenPortfolioEntry token_entries = 2;  // Token portfolio entries
+  repeated AttestationReference attestation_entries = 3;  // Attestation references
+  repeated SyncActivityReference sync_entries = 4;  // Sync activity references
+  bytes ledger_hash = 5;  // Hash of the entire ledger for verification
+  uint64 last_updated_ms = 6;  // Last update timestamp
+}
+
+// TokenPortfolioEntry represents a token in the personal ledger
+message TokenPortfolioEntry {
+  string token_id = 1;  // Token identifier
+  bytes dht_entry_hash = 2;  // Hash of the DHT entry containing this token
+  uint64 sequence_number = 3;  // Sequence number in the personal chain
+  uint64 acquisition_timestamp_ms = 4;  // When the token was acquired
+  string acquisition_type = 5;  // How the token was acquired (transaction, creation, etc.)
+  string previous_owner_id = 6;  // Previous owner identifier (if applicable)
+}
+
+// AttestationReference represents an attestation in the personal ledger
+message AttestationReference {
+  string attestation_id = 1;  // Attestation identifier
+  bytes dht_entry_hash = 2;  // Hash of the DHT entry containing this attestation
+  uint64 sequence_number = 3;  // Sequence number in the personal chain
+  string attestation_type = 4;  // Type of attestation
+  string target_user_id = 5;  // Target user identifier (if given to someone)
+  string source_user_id = 6;  // Source user identifier (if received from someone)
+}
+
+// SyncActivityReference represents a sync activity in the personal ledger
+message SyncActivityReference {
+  string sync_id = 1;  // Sync activity identifier
+  bytes dht_entry_hash = 2;  // Hash of the DHT entry containing this sync activity
+  uint64 sequence_number = 3;  // Sequence number in the personal chain
+  string peer_id = 4;  // Peer identifier
+  uint64 timestamp_ms = 5;  // Timestamp
+  uint32 records_synced = 6;  // Number of records synced
+  SyncDirection direction = 7;  // Direction of sync
+}
+
+// SyncDirection represents the direction of a sync operation
+enum SyncDirection {
+  OUTGOING = 0;  // Local to peer
+  INCOMING = 1;  // Peer to local
+  BIDIRECTIONAL = 2;  // Both directions
+}
+
+// ChainVerificationRequest represents a request to verify a personal chain
+message ChainVerificationRequest {
+  string user_id = 1;  // User identifier
+  uint64 start_sequence = 2;  // Starting sequence number
+  uint64 end_sequence = 3;  // Ending sequence number
+  bool include_entry_content = 4;  // Whether to include entry content
+  bool verify_portfolio_consistency = 5;  // Whether to verify token portfolio consistency
+  bool verify_attestation_consistency = 6;  // Whether to verify attestation consistency
+}
+
+// ChainVerificationResult represents the result of a chain verification
+message ChainVerificationResult {
+  bool chain_valid = 1;  // Whether the chain is valid
+  string user_id = 2;  // User identifier
+  repeated ChainSegment segments = 3;  // Chain segments
+  string verification_error = 4;  // Error if invalid
+  float consistency_score = 5;  // Overall consistency score (0.0-1.0)
+  PortfolioVerificationResult portfolio_verification = 6;  // Portfolio verification result
+  AttestationVerificationResult attestation_verification = 7;  // Attestation verification result
+}
+
+// PortfolioVerificationResult represents the result of a token portfolio verification
+message PortfolioVerificationResult {
+  bool consistent = 1;  // Whether the portfolio is consistent with the chain
+  uint32 tokens_verified = 2;  // Number of tokens verified
+  uint32 inconsistencies_found = 3;  // Number of inconsistencies found
+  repeated string inconsistent_token_ids = 4;  // List of inconsistent token IDs
+}
+
+// AttestationVerificationResult represents the result of an attestation verification
+message AttestationVerificationResult {
+  bool consistent = 1;  // Whether attestations are consistent with the chain
+  uint32 attestations_verified = 2;  // Number of attestations verified
+  uint32 inconsistencies_found = 3;  // Number of inconsistencies found
+  repeated string inconsistent_attestation_ids = 4;  // List of inconsistent attestation IDs
+}
+
+// ChainSegment represents a segment of a personal chain
+message ChainSegment {
+  uint64 sequence_number = 1;  // Sequence number
+  bytes entry_hash = 2;  // Hash of the entry
+  bytes previous_hash = 3;  // Hash of the previous entry
+  uint64 timestamp_ms = 4;  // Timestamp
+  bytes content_hash = 5;  // Hash of the content (if not included)
+  bytes content = 6;  // Content (if included)
+  string entry_type = 7;  // Type of entry
+} 

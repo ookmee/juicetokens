@@ -1,0 +1,15 @@
+{
+  "name": "@juicetokens/foundation",
+  "version": "0.1.0",
+  "description": "Foundation Layer: Core Infrastructure for JuiceTokens protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@juicetokens/common": "^0.1.0",
+    "@juicetokens/proto": "^0.1.0"
+  }
+} 

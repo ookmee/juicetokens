@@ -1,36 +1,46 @@
 {
-  "name": "token-engine",
+  "name": "juicetokens",
   "version": "0.1.0",
-  "description": "Token exchange protocol implementation",
+  "description": "JuiceTokens protocol implementation",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm run proto && tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "start": "docker-compose up",
+    "start:detached": "docker-compose up -d",
+    "stop": "docker-compose down",
     "test": "jest",
-    "proto": "rimraf src/generated && mkdir -p src/generated && protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs,binary:./src/generated --ts_out=service=grpc-node:./src/generated ./protos/*.proto",
-    "proto:watch": "nodemon --watch protos --ext proto --exec 'npm run proto'"
+    "monitor": "docker-compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up",
+    "build": "npm run build:proto && npm run build:ts",
+    "build:proto": "node tools/proto-compiler.js",
+    "build:ts": "tsc -b",
+    "clean": "rimraf packages/*/dist",
+    "lint": "eslint --ext .ts packages/*/src",
+    "format": "prettier --write \"packages/*/src/**/*.ts\""
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
-    "@grpc/grpc-js": "^1.10.8",
-    "@grpc/proto-loader": "^0.7.10",
-    "express": "^4.18.2",
-    "google-protobuf": "^3.21.4",
-    "ipfs-http-client": "^60.0.1",
-    "mongodb": "^6.3.0",
-    "grpc-web": "^1.4.2",
-    "@improbable-eng/grpc-web": "^0.15.0"
+    "long": "^5.2.3",
+    "protobufjs": "^7.2.5"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/google-protobuf": "^3.15.12",
-    "@types/node": "^20.11.24",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.2",
-    "ts-protoc-gen": "^0.15.0",
-    "typescript": "^5.3.3",
-    "rimraf": "^5.0.5",
-    "nodemon": "^3.1.0"
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-typescript": "^7.22.5",
+    "@jest/globals": "^29.5.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.16.16",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
+    "@typescript-eslint/parser": "^5.59.11",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "jest": "^29.5.0",
+    "prettier": "^2.8.8",
+    "protobufjs-cli": "^1.1.2",
+    "rimraf": "^5.0.1",
+    "serve": "^14.2.1",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.3"
   }
 }

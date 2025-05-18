@@ -1,0 +1,23 @@
+{
+  "name": "@juicetokens/app",
+  "version": "0.1.0",
+  "description": "Main application for JuiceTokens protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@juicetokens/common": "^0.1.0",
+    "@juicetokens/foundation": "^0.1.0",
+    "@juicetokens/transport": "^0.1.0",
+    "@juicetokens/token": "^0.1.0",
+    "@juicetokens/trust": "^0.1.0",
+    "@juicetokens/lifecycle": "^0.1.0",
+    "@juicetokens/extension": "^0.1.0",
+    "@juicetokens/governance": "^0.1.0",
+    "@juicetokens/proto": "^0.1.0"
+  }
+} 

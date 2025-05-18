@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JuiceTokens Test Environment</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>JuiceTokens Test Environment</h1>
+            <nav id="main-nav">
+                <a href="#/" class="nav-link active">Home</a>
+                <a href="#/tokens" class="nav-link">Tokens</a>
+                <a href="#/transactions" class="nav-link">Transactions</a>
+                <a href="#/settings" class="nav-link">Settings</a>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            <!-- Content will be dynamically loaded here -->
+        </main>
+
+        <footer class="app-footer">
+            <div id="connection-status"></div>
+            <div id="debug-info"></div>
+        </footer>
+    </div>
+
+    <!-- Base Components -->
+    <script src="js/components/base.js"></script>
+    
+    <!-- Protocol Implementation -->
+    <script src="js/protocol/token.js"></script>
+    <script src="js/protocol/transaction.js"></script>
+    <script src="js/protocol/adapter.js"></script>
+    <script src="js/protocol/manager.js"></script>
+    
+    <!-- Application -->
+    <script src="js/utils/router.js"></script>
+    <script src="js/utils/store.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html> 

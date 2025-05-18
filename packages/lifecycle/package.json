@@ -1,0 +1,19 @@
+{
+  "name": "@juicetokens/lifecycle",
+  "version": "0.1.0",
+  "description": "Token Lifecycle Layer: Temporal Value Management for JuiceTokens protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@juicetokens/common": "^0.1.0",
+    "@juicetokens/foundation": "^0.1.0",
+    "@juicetokens/transport": "^0.1.0",
+    "@juicetokens/token": "^0.1.0",
+    "@juicetokens/trust": "^0.1.0",
+    "@juicetokens/proto": "^0.1.0"
+  }
+} 

@@ -1,92 +1,143 @@
 # JuiceTokens Architecture Overview
 
-## System Components
+## Introduction
 
-### 1. Protocol Layer
-- **Core Protocol**: Implemented in Rust/WASM for portability
-- **Protocol Buffers**: Shared message definitions
-- **TEE Integration**: Simulated in Docker, later to be replaced by native TEE
+JuiceTokens is built on a protocol-first design with a seven-layer architecture that enables peer-to-peer value exchange. The protocol serves as the heart of the system, with implementations (both final product and test) built on top of this foundation.
 
-### 2. Application Layer
-- **PWA Frontend**: Test interface for protocol interaction
-- **Token Engine**: Protocol implementation in TypeScript/Node.js
-- **Storage Layer**: MongoDB for token persistence
+## Protocol Architecture
 
-### 3. Infrastructure Layer
-- **Docker Containers**: 
-  - Token Engine Container
-  - TEE Simulator Container
-  - Monitoring Containers (Prometheus, Grafana)
-- **MongoDB**: Token storage
-- **Monitoring**: Prometheus metrics, Grafana dashboards
+### 1. Foundation Layer
+- **Hardware Abstraction**
+  - TEE Integration
+  - Device Capability Discovery
+  - Time Source Management
+- **Persistence Management**
+  - Local Storage
+  - Distributed Hash Table
+  - Synchronization Primitives
 
-## Development Environment
+### 2. Transport Layer
+- **Pipe Abstraction**
+  - Transport Protocol Handlers
+  - Message Framing
+  - Reliability Mechanisms
+- **Network Topology**
+  - Peer Discovery
+  - Mesh Network Formation
+  - Connection Management
+
+### 3. Core Token Layer
+- **Token Primitives**
+  - Token Model
+  - Telomeer Management
+  - Cryptographic Operations
+- **Transaction Protocol**
+  - Four-Packet Transaction Model
+  - Atomic Commitment
+  - Token Flow Management
+
+### 4. Trust and Attestation Layer
+- **DHT-Based Attestation**
+  - Attestation Records
+  - Distribution Mechanisms
+  - Identity Management
+- **Reputation Engine**
+  - Multi-dimensional Scoring
+  - Contextual Analysis
+  - Attestation Oracle Protocol
+
+### 5. Token Lifecycle Layer
+- **Creation and Renewal**
+  - Token Creation Protocol
+  - Renewal Management
+  - Egg Dormancy System
+- **Future Value**
+  - Promise Protocol
+  - Escrow Mechanisms
+  - Communal Pooling
+
+### 6. Application Integration Layer
+- **Usage Patterns**
+- **Integration Points**
+- **Extension Mechanisms**
+
+### 7. Governance Layer
+- **System Evolution**
+- **Protocol Updates**
+- **Community Management**
+
+## Implementation Architecture
+
+### Final Product
+- **Native App Component**
+  - Security Layer (TEE integration)
+  - Transport Layer (BLE, NFC)
+  - Cold Storage Support
+- **PWA Component**
+  - UI Layer
+  - TokenEngine (Rust->WASM)
+  - Hot Wallet (IndexedDB)
+
+### Test Implementation
+- **Docker-based User Instances**
+  - Isolated Test Environments
+  - Full Protocol Implementation
+  - Security Validation
+- **Monitoring Infrastructure**
+  - Prometheus Metrics
+  - Grafana Dashboards
+  - Container Health Tracking
+
+## Security Architecture
+
+### Hardware Security
+- TEE Integration
+- Secure Key Storage
+- Attestation Verification
+
+### Protocol Security
+- Cryptographic Operations
+- Zero-Knowledge Proofs
+- Privacy-Preserving Mechanisms
+
+### Network Security
+- TLS Encryption
+- Authentication
+- Rate Limiting
+
+## Development and Testing
 
 ### Local Development
-- TypeScript/Node.js for rapid development
-- Docker for containerized testing
-- Protocol Buffer compilation pipeline
-- Hot-reloading for development
+- Protocol Buffer Compilation
+- Hot-reloading Support
+- Development Tools
 
 ### Testing Environment
-- Docker-based TEE simulation
-- Multiple container instances for testing
-- Monitoring and logging infrastructure
+- Docker-based User Instances
+- Monitoring Infrastructure
+- Security Validation Tools
 
 ### Production Environment
-- VPS deployment
-- Container orchestration
-- Monitoring and alerting
-- Backup and recovery
+- VPS Deployment
+- Container Orchestration
+- Monitoring and Alerting
+- Backup and Recovery
 
-## Protocol Portability
+## Future Extensibility
 
-The protocol is designed to be portable across different environments:
-1. **Rust/WASM Core**: 
-   - Core cryptographic operations
-   - Protocol state machine
-   - TEE integration points
+The protocol-first design enables smooth integration of future extensions:
 
-2. **TypeScript/Node.js Implementation**:
-   - Server-side protocol handling
-   - Storage integration
-   - API endpoints
+### Hardware Integration
+- Smart Card Support
+- Additional TEE Implementations
+- New Transport Protocols
 
-3. **Future Native Implementation**:
-   - Flutter app with real TEE
-   - Direct protocol integration
-   - Secure storage
+### Protocol Extensions
+- New Token Types
+- Enhanced Security Features
+- Additional Functionality
 
-## Security Considerations
-
-1. **TEE Simulation**:
-   - Docker-based TEE simulation for development
-   - Secure execution environment
-   - Isolated token operations
-
-2. **Token Security**:
-   - Encrypted token storage
-   - Secure key management
-   - Access control
-
-3. **Network Security**:
-   - TLS encryption
-   - Authentication
-   - Rate limiting
-
-## Monitoring and Operations
-
-1. **Metrics Collection**:
-   - Protocol performance
-   - Container health
-   - System resources
-
-2. **Alerting**:
-   - Protocol violations
-   - System issues
-   - Security events
-
-3. **Logging**:
-   - Protocol events
-   - System logs
-   - Audit trails 
+### Storage Options
+- New Database Implementations
+- Distributed Storage
+- Enhanced Backup Solutions

@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package juicetokens.lifecycle.creation;
+
+import "token/model.proto";
+
+// Token Creation Protocol
+message EggGeneration {
+  string egg_id = 1;  // Unique egg identifier
+  string batch_reference = 2;  // Batch reference
+  uint32 denomination = 3;  // Denomination
+  uint32 count = 4;  // Number of eggs to generate
+  repeated string generator_ids = 5;  // Egg generators
+  bytes entropy_commitment = 6;  // Commitment to entropy
+  uint64 generation_timestamp_ms = 7;  // Generation timestamp
+}
+
+message HatchingCondition {
+  string egg_id = 1;  // Egg identifier
+  enum ConditionType {
+    ATTESTATION_THRESHOLD = 0;  // Requires sufficient attestations
+    ACTIVITY_COMPLETION = 1;    // Requires specific activity
+    TEMPORAL_TRIGGER = 2;       // Time-based trigger
+    MULTI_PARTY_AGREEMENT = 3;  // Requires multiple parties to agree
+  }
+  ConditionType condition_type = 2;
+  bytes condition_parameters = 3;  // Serialized parameters
+  uint64 expiry_ms = 4;  // When the condition expires
+}
+
+message TokenDistribution {
+  string batch_id = 1;  // Batch identifier
+  enum DistributionStrategy {
+    EQUAL = 0;      // Equal distribution
+    WEIGHTED = 1;   // Weighted by contribution
+    MERIT_BASED = 2;  // Based on merit
+    NEED_BASED = 3;   // Based on need
+  }
+  DistributionStrategy strategy = 2;
+  map<string, float> recipient_weights = 3;  // Weights by recipient
+  repeated juicetokens.token.model.Token tokens = 4;  // Tokens to distribute
+}
+
+message GenesisPool {
+  string pool_id = 1;  // Pool identifier
+  repeated string member_ids = 2;  // Member identifiers
+  map<string, float> attestation_strengths = 3;  // Attestation strength by member
+  float combined_strength = 4;  // Combined attestation strength
+  uint64 formation_timestamp_ms = 5;  // Formation timestamp
+}
+
+// Egg Dormancy System
+message DormantEgg {
+  string egg_id = 1;  // Egg identifier
+  uint32 denomination = 2;  // Denomination value
+  string owner_id = 3;  // Owner identifier
+  bytes dormancy_seal = 4;  // Cryptographic seal
+  HatchingCondition hatching_condition = 5;  // Conditions for hatching
+  uint64 creation_timestamp_ms = 6;  // Creation timestamp
+  uint64 dormancy_expires_ms = 7;  // When dormancy expires
+}
+
+message FertilizationTrigger {
+  string egg_id = 1;  // Egg identifier
+  string activator_id = 2;  // User triggering fertilization
+  string activity_reference = 3;  // Reference to qualifying activity
+  bytes proof_of_activity = 4;  // Proof of the activity
+  uint64 trigger_timestamp_ms = 5;  // Trigger timestamp
+}
+
+message MaturationPath {
+  string egg_id = 1;  // Egg identifier
+  enum MaturationStage {
+    DORMANT = 0;      // Initial dormant state
+    FERTILIZED = 1;   // Successfully fertilized
+    INCUBATING = 2;   // In incubation period
+    HATCHING = 3;     // Hatching process
+    ACTIVE = 4;       // Fully active token
+  }
+  MaturationStage current_stage = 2;
+  uint64 stage_entered_ms = 3;  // When the current stage was entered
+  uint64 estimated_completion_ms = 4;  // Estimated completion time
+  float completion_percentage = 5;  // Completion percentage
+}
+
+message EggComponent {
+  string component_id = 1;  // Component identifier
+  uint32 denomination = 2;  // Denomination value
+  string issuer_id = 3;  // Issuer identifier
+  bytes issuer_commitment = 4;  // Issuer's cryptographic commitment
+  uint64 creation_timestamp_ms = 5;  // Creation timestamp
+  repeated string authorized_fertilizers = 6;  // Authorized fertilizers
+}
+
+message SpermComponent {
+  string component_id = 1;  // Component identifier
+  string activity_type = 2;  // Type of generative activity
+  uint32 potency_level = 3;  // Potency level (0-100)
+  string generator_id = 4;  // Generator identifier
+  bytes activity_proof = 5;  // Proof of activity
+  uint64 generation_timestamp_ms = 6;  // Generation timestamp
+  uint64 viability_expires_ms = 7;  // When viability expires
+}
+
+message FertilizationEvent {
+  string fertilization_id = 1;  // Fertilization identifier
+  string egg_component_id = 2;  // Egg component identifier
+  string sperm_component_id = 3;  // Sperm component identifier
+  bytes compatibility_proof = 4;  // Proof of compatibility
+  uint64 fertilization_timestamp_ms = 5;  // Fertilization timestamp
+  uint32 maturation_period_hours = 6;  // Maturation period in hours
+  repeated string witnesses = 7;  // Witnesses to the fertilization
+} 

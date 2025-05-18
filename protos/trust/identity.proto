@@ -1,0 +1,212 @@
+syntax = "proto3";
+
+package juicetokens.trust.identity;
+
+import "trust/attestation.proto";  // For attestation references
+
+// Identity Management
+message Identity {
+  string identity_id = 1;  // Unique identity identifier
+  repeated string public_keys = 2;  // Associated public keys
+  string active_key_id = 3;  // Currently active key ID
+  string display_name = 4;  // Human-readable name
+  repeated IdentityAttribute attributes = 5;  // Identity attributes
+  uint64 creation_time_ms = 6;  // Creation timestamp
+  string recovery_method = 7;  // Recovery method identifier
+  IdentityStatus status = 8;  // Current status
+}
+
+enum IdentityStatus {
+  ACTIVE = 0;      // Normal operation
+  SUSPENDED = 1;   // Temporarily suspended
+  REVOKED = 2;     // Permanently revoked
+  RECOVERY = 3;    // In recovery process
+}
+
+message IdentityAttribute {
+  string attribute_name = 1;  // Attribute name
+  string attribute_value = 2;  // Attribute value
+  bool self_attested = 3;  // Whether self-attested
+  repeated string attestation_ids = 4;  // Supporting attestation IDs
+  bool public = 5;  // Whether the attribute is public
+  uint64 last_updated_ms = 6;  // Last update timestamp
+  AttributeVerificationStatus verification_status = 7;  // Verification status
+}
+
+enum AttributeVerificationStatus {
+  UNVERIFIED = 0;       // Not verified
+  PEER_VERIFIED = 1;    // Verified by peers
+  SYSTEM_VERIFIED = 2;  // Verified by system
+  EXPERT_VERIFIED = 3;  // Verified by trusted expert
+}
+
+message IdentityCreation {
+  bytes initial_public_key = 1;  // Initial public key
+  string display_name = 2;  // Human-readable name
+  map<string, string> initial_attributes = 3;  // Initial attributes
+  bytes signature = 4;  // Signature of creation data
+  string recovery_method = 5;  // Recovery method 
+  bytes recovery_data = 6;  // Recovery-specific data
+}
+
+message IdentityUpdate {
+  string identity_id = 1;  // Identity identifier
+  string updated_field = 2;  // Field being updated
+  bytes new_value = 3;  // New value
+  uint64 timestamp_ms = 4;  // Update timestamp
+  bytes signature = 5;  // Signature by active key
+  string update_reason = 6;  // Reason for the update
+  uint64 sequence_number = 7;  // Update sequence number
+}
+
+// Social and trust relationships
+message IdentityLink {
+  string source_identity_id = 1;  // Source identity
+  string target_identity_id = 2;  // Target identity
+  enum LinkType {
+    KNOWS = 0;     // General connection
+    TRUSTS = 1;    // Trust relationship
+    ENDORSES = 2;  // Professional endorsement
+    FAMILY = 3;    // Family relationship
+    GUARDIAN = 4;  // Guardian relationship
+    RECOVERY = 5;  // Recovery trusted contact
+  }
+  LinkType link_type = 3;
+  uint32 strength = 4;  // Strength of link (0-100)
+  string description = 5;  // Description of the link
+  uint64 timestamp_ms = 6;  // When the link was created
+  bytes signature = 7;  // Signature by source identity
+  bool bidirectional = 8;  // Whether the link is bidirectional
+}
+
+// Identity recovery features
+message RecoveryMethod {
+  string method_id = 1;  // Method identifier
+  enum MethodType {
+    SOCIAL_RECOVERY = 0;   // Recovery through trusted contacts
+    SEED_PHRASE = 1;       // Recovery with seed phrase
+    BACKUP_KEY = 2;        // Recovery with backup key
+    KYC_PROVIDER = 3;      // Recovery through KYC provider
+    MULTI_DEVICE = 4;      // Multi-device authentication
+  }
+  MethodType method_type = 2;
+  bytes method_parameters = 3;  // Method-specific parameters
+  bool active = 4;  // Whether the method is active
+}
+
+message SocialRecoveryConfiguration {
+  string identity_id = 1;  // Identity to recover
+  repeated string trusted_recovery_contacts = 2;  // Trusted contacts
+  uint32 threshold = 3;  // Required approvals (M-of-N)
+  uint32 challenge_duration_hours = 4;  // Waiting period
+  uint64 last_updated_ms = 5;  // Last update timestamp
+  bytes encrypted_recovery_data = 6;  // Encrypted recovery information
+  bytes recovery_verification_key = 7;  // Public key for verification
+}
+
+message RecoveryRequest {
+  string identity_id = 1;  // Identity to recover
+  string requester_contact = 2;  // Contact for the requester
+  bytes proof_of_identity = 3;  // Proof of identity
+  uint64 request_timestamp_ms = 4;  // Request timestamp
+  bytes challenge_response = 5;  // Response to challenge if any
+  string recovery_method_id = 6;  // Method being used
+}
+
+message RecoveryApproval {
+  string recovery_request_id = 1;  // Request identifier
+  string approver_id = 2;  // Approver identity
+  bool approved = 3;  // Whether approved
+  string comment = 4;  // Optional comment
+  uint64 approval_timestamp_ms = 5;  // Approval timestamp
+  bytes signature = 6;  // Approver's signature
+}
+
+// Decentralized Identifiers (DIDs)
+message DIDDocument {
+  string id = 1;  // Decentralized Identifier
+  repeated VerificationMethod verification_methods = 2;  // Verification methods
+  repeated string authentication = 3;  // Authentication references
+  repeated string assertion_method = 4;  // Assertion method references
+  repeated Service services = 5;  // Services
+  repeated string controller_ids = 6;  // Controller DIDs
+  uint64 updated_ms = 7;  // Last update timestamp
+}
+
+message VerificationMethod {
+  string id = 1;  // Method identifier
+  string type = 2;  // Verification method type
+  string controller = 3;  // Controller DID
+  bytes public_key_multibase = 4;  // Multibase-encoded public key
+}
+
+message Service {
+  string id = 1;  // Service identifier
+  string type = 2;  // Service type
+  string service_endpoint = 3;  // Service endpoint URL
+  map<string, string> properties = 4;  // Additional properties
+}
+
+// DHT integration for identity
+message IdentityDHTWrapper {
+  bytes identity_data = 1;  // Serialized Identity
+  bytes did_document = 2;  // Serialized DIDDocument
+  string identity_id = 3;  // Identity identifier
+  uint64 timestamp_ms = 4;  // Entry timestamp
+  bytes signature = 5;  // Signature by active key
+  uint32 ttl_seconds = 6;  // Time-to-live in seconds
+  string entry_type = 7;  // Fixed to "identity" for DHT entry_type
+}
+
+// Personal chain integration
+message IdentityChainEntry {
+  string identity_id = 1;  // Identity identifier
+  bytes identity_hash = 2;  // Hash of the identity data
+  uint64 sequence_number = 3;  // Sequence number
+  string entry_type = 4;  // Fixed to "identity"
+  enum EventType {
+    CREATION = 0;      // Identity creation
+    UPDATE = 1;        // Identity update
+    VERIFICATION = 2;  // Identity verification
+    KEY_ROTATION = 3;  // Key rotation
+    STATUS_CHANGE = 4; // Status change
+  }
+  EventType event_type = 5;
+  bytes dht_key = 6;  // DHT key where full identity is stored
+  bytes signature = 7;  // Signature for the chain entry
+}
+
+// Selective disclosure and Zero Knowledge Proofs
+message DisclosureRequest {
+  string requester_id = 1;  // Requester identity
+  string subject_id = 2;  // Subject identity
+  repeated string requested_attributes = 3;  // Requested attributes
+  string purpose = 4;  // Purpose of the request
+  uint64 timestamp_ms = 5;  // Request timestamp
+  bytes signature = 6;  // Requester's signature
+  uint64 validity_seconds = 7;  // How long the disclosure is valid
+}
+
+message AttributeDisclosure {
+  string disclosure_id = 1;  // Disclosure identifier
+  string subject_id = 2;  // Subject identity
+  string recipient_id = 3;  // Recipient identity
+  map<string, string> disclosed_attributes = 4;  // Disclosed attributes
+  bytes disclosure_signature = 5;  // Subject's signature
+  uint64 created_ms = 6;  // Creation timestamp
+  uint64 expires_ms = 7;  // Expiry timestamp
+  string purpose = 8;  // Purpose of disclosure
+  bool revocable = 9;  // Whether disclosure can be revoked
+}
+
+message ZeroKnowledgeProof {
+  string proof_id = 1;  // Proof identifier
+  string subject_id = 2;  // Subject identity
+  string verifier_id = 3;  // Verifier identity
+  string proof_type = 4;  // Type of proof
+  string attribute_identifier = 5;  // Attribute being proved
+  string predicate = 6;  // Predicate (e.g., "over18")
+  bytes proof_data = 7;  // The actual proof
+  uint64 created_ms = 8;  // Creation timestamp
+  uint64 expires_ms = 9;  // Expiry timestamp
+} 

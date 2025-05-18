@@ -1,0 +1,281 @@
+syntax = "proto3";
+
+package juicetokens.foundation.hardware;
+
+option go_package = "github.com/juicetokens/protos/foundation/hardware";
+
+// Hardware Abstraction Layer
+// This file defines the protocol buffers for the hardware abstraction layer,
+// which provides a unified interface for hardware capabilities across different
+// platforms and implementations.
+
+// TEE Integration Interface
+// Provides secure execution environment for cryptographic operations and key storage
+
+// SecureKeyStorage represents a key stored in the TEE
+message SecureKeyStorage {
+  string key_id = 1;  // Unique identifier for the key
+  bytes public_key = 2;  // Public portion of the key
+  string storage_location = 3;  // Enum: "TEE", "SE", "SOFTWARE"
+  bool exportable = 4;  // Whether the private key can be exported
+}
+
+// CryptographicOperationRequest represents a request to perform a cryptographic operation in the TEE
+message CryptographicOperationRequest {
+  string key_id = 1;  // Key to use for the operation
+  enum OperationType {
+    SIGN = 0;  // Create a signature
+    VERIFY = 1;  // Verify a signature
+    ENCRYPT = 2;  // Encrypt data
+    DECRYPT = 3;  // Decrypt data
+  }
+  OperationType operation_type = 2;
+  bytes data = 3;  // Data to operate on
+  string algorithm = 4;  // Algorithm to use (e.g., "ECDSA_P256")
+}
+
+// CryptographicOperationResponse represents the result of a cryptographic operation
+message CryptographicOperationResponse {
+  bool success = 1;  // Whether the operation succeeded
+  bytes result = 2;  // Result of the operation (e.g., signature)
+  string error_message = 3;  // Error message if operation failed
+}
+
+// Attestation verification for TEE integrity
+message TEEAttestationRequest {
+  string tee_type = 1;  // Type of TEE (e.g., "SGX", "TrustZone", "TPM")
+  bytes challenge = 2;  // Challenge data to verify freshness
+  repeated string required_security_levels = 3;  // Required security levels
+  bool verify_id = 4;  // Whether to verify the TEE identity
+}
+
+message TEEAttestationResponse {
+  bool success = 1;  // Whether attestation succeeded
+  bytes attestation_evidence = 2;  // Evidence of attestation
+  string error_message = 3;  // Error message if attestation failed
+  bytes tee_identity = 4;  // Identity of the TEE
+  map<string, string> security_properties = 5;  // Security properties of the TEE
+  uint64 timestamp_ms = 6;  // Timestamp of attestation
+}
+
+// Device Capability Discovery
+// Provides information about available hardware capabilities
+
+// DeviceCapabilities represents the capabilities of a device
+message DeviceCapabilities {
+  repeated CommunicationInterface available_interfaces = 1;  // Available communication interfaces
+  StorageCapability storage = 2;  // Storage capabilities
+  CryptographicSupport crypto = 3;  // Cryptographic capabilities
+  bool has_camera = 4;  // For QR code functionality
+  bool has_tee = 5;  // Trusted Execution Environment
+  bool has_secure_element = 6;  // Hardware security module
+  repeated DisplayCapability displays = 7;  // Display capabilities
+  PowerInformation power = 8;  // Power information
+  ProcessorInformation processor = 9;  // Processor information
+  ConnectivityStatus connectivity = 10;  // Connectivity status
+}
+
+// CommunicationInterface represents an available communication method
+enum CommunicationInterface {
+  BLE = 0;  // Bluetooth Low Energy
+  NFC = 1;  // Near Field Communication
+  HTTPS = 2;  // Internet connectivity
+  WIFI_DIRECT = 3;  // Direct WiFi connection
+}
+
+// StorageCapability represents the storage capabilities of the device
+message StorageCapability {
+  uint64 available_bytes = 1;  // Available storage space
+  bool persistent_storage_available = 2;  // Whether persistent storage is available
+  bool encrypted_storage_supported = 3;  // Whether storage can be encrypted
+  uint64 total_bytes = 4;  // Total storage space
+  string storage_type = 5;  // Type of storage (e.g., "SSD", "HDD", "eMMC")
+  uint32 io_performance_score = 6;  // Relative I/O performance score (0-100)
+}
+
+// CryptographicSupport represents the cryptographic capabilities of the device
+message CryptographicSupport {
+  bool hardware_acceleration = 1;  // Hardware acceleration for crypto operations
+  repeated string supported_algorithms = 2;  // List of supported algorithms
+  bool secure_random_available = 3;  // Availability of secure random number generator
+  uint32 key_size_max = 4;  // Maximum supported key size in bits
+  repeated string supported_curves = 5;  // Supported elliptic curves
+  bool multi_party_computation_supported = 6;  // Whether MPC is supported
+  bool homomorphic_encryption_supported = 7;  // Whether homomorphic encryption is supported
+}
+
+// DisplayCapability represents the display capabilities of the device
+message DisplayCapability {
+  uint32 width_pixels = 1;  // Width in pixels
+  uint32 height_pixels = 2;  // Height in pixels
+  float refresh_rate_hz = 3;  // Refresh rate in Hz
+  bool touch_supported = 4;  // Whether touch is supported
+  uint32 color_depth_bits = 5;  // Color depth in bits
+  float brightness_nits = 6;  // Brightness in nits
+  string display_type = 7;  // Display type (e.g., "LCD", "OLED")
+}
+
+// PowerInformation represents the power status of the device
+message PowerInformation {
+  enum PowerSource {
+    BATTERY = 0;  // Battery power
+    AC = 1;  // AC power
+    USB = 2;  // USB power
+    WIRELESS = 3;  // Wireless charging
+    UNKNOWN = 4;  // Unknown power source
+  }
+  PowerSource power_source = 1;
+  int32 battery_percentage = 2;  // Battery percentage (0-100)
+  int32 estimated_remaining_time_minutes = 3;  // Estimated battery life in minutes
+  PowerMode power_mode = 4;  // Current power mode
+  bool low_power_mode_enabled = 5;  // Whether low power mode is enabled
+}
+
+// PowerMode represents the power mode of the device
+enum PowerMode {
+  NORMAL = 0;  // Normal power mode
+  LOW_POWER = 1;  // Low power mode
+  PERFORMANCE = 2;  // Performance mode
+  BALANCED = 3;  // Balanced mode
+}
+
+// ProcessorInformation represents the processor capabilities of the device
+message ProcessorInformation {
+  uint32 core_count = 1;  // Number of CPU cores
+  string architecture = 2;  // CPU architecture (e.g., "ARM", "x86")
+  uint32 performance_score = 3;  // Relative performance score (0-100)
+  uint32 available_memory_mb = 4;  // Available memory in MB
+  uint32 total_memory_mb = 5;  // Total memory in MB
+}
+
+// ConnectivityStatus represents the connectivity status of the device
+message ConnectivityStatus {
+  enum ConnectionType {
+    NONE = 0;  // No connection
+    WIFI = 1;  // WiFi connection
+    CELLULAR = 2;  // Cellular connection
+    ETHERNET = 3;  // Ethernet connection
+    BLUETOOTH = 4;  // Bluetooth connection
+  }
+  ConnectionType primary_connection = 1;
+  int32 signal_strength = 2;  // Signal strength (0-100)
+  bool vpn_active = 3;  // Whether VPN is active
+  uint32 bandwidth_kbps = 4;  // Estimated bandwidth in kbps
+  int32 latency_ms = 5;  // Network latency in ms
+}
+
+// Time Source Management
+// Provides reliable time references across the system
+
+// TimeSource represents a source of time information
+message TimeSource {
+  enum SourceType {
+    SYSTEM = 0;  // System clock
+    NTP = 1;  // Network Time Protocol
+    GNSS = 2;  // Global Navigation Satellite System
+    RADIO = 3;  // Radio time signals
+    CONSENSUS = 4;  // Time consensus from peers
+  }
+  SourceType source_type = 1;
+  int64 timestamp_ms = 2;  // Milliseconds since Unix epoch
+  uint32 confidence_score = 3;  // 0-100 confidence score
+}
+
+// TimeConsensus represents aggregated time from multiple sources
+message TimeConsensus {
+  repeated TimeSource sources = 1;  // All available time sources
+  int64 consensus_timestamp_ms = 2;  // Agreed-upon timestamp in milliseconds
+  uint32 consensus_confidence = 3;  // Overall confidence in the consensus (0-100)
+}
+
+// Time status verification for transactions
+message TimeStatusVerification {
+  string transaction_id = 1;  // Transaction identifier
+  int64 timestamp_ms = 2;  // Timestamp in milliseconds
+  uint32 confidence_score = 3;  // 0-100 confidence score
+  bool meets_finalization_requirements = 4;  // Whether requirements are met
+  string verification_failure_reason = 5;  // Reason for failure if any
+  enum TimeStatus {
+    VERIFIED = 0;    // Normal operation with GPS/network time (millisecond differences)
+    CONSENSUS = 1;   // Primary sources unavailable, differences < 5 seconds 
+    INADEQUATE = 2;  // Differences > 5 seconds, requires synchronization
+  }
+  TimeStatus time_status = 6;  // Current time status
+}
+
+// SpoofingDetectionResult represents the result of time spoofing detection
+message SpoofingDetectionResult {
+  bool spoofing_detected = 1;  // Whether time spoofing was detected
+  string detection_reason = 2;  // Reason for detection
+  int64 expected_time_range_min_ms = 3;  // Expected minimum time
+  int64 expected_time_range_max_ms = 4;  // Expected maximum time
+  int64 detected_time_ms = 5;  // Detected time
+}
+
+// Enhanced cryptographic operations for TEE interaction
+message KeyAttributes {
+  string key_id = 1;  // Unique identifier for the key
+  string key_type = 2;  // Type of key (e.g., "RSA", "EC", "AES")
+  uint32 key_size_bits = 3;  // Size of the key in bits
+  string algorithm = 4;  // Algorithm (e.g., "ECDSA_P256")
+  bool exportable = 5;  // Whether the key can be exported
+  uint64 creation_timestamp_ms = 6;  // When the key was created
+  uint64 expiry_timestamp_ms = 7;  // When the key expires
+  repeated KeyUsage usages = 8;  // Allowed usages for the key
+  bytes key_material = 9;  // Key material (for public keys only)
+  string storage_location = 10;  // Where the key is stored
+}
+
+// KeyUsage represents the allowed usages for a key
+enum KeyUsage {
+  ENCRYPT = 0;  // Encrypt data
+  DECRYPT = 1;  // Decrypt data
+  SIGN = 2;  // Create digital signatures
+  VERIFY = 3;  // Verify digital signatures
+  DERIVE = 4;  // Derive other keys
+  WRAP = 5;  // Wrap other keys
+  UNWRAP = 6;  // Unwrap other keys
+}
+
+// KeyPairGenerationRequest represents a request to generate a key pair
+message KeyPairGenerationRequest {
+  string key_type = 1;  // Type of key (e.g., "RSA", "EC", "AES")
+  uint32 key_size_bits = 2;  // Size of the key in bits
+  string algorithm = 3;  // Algorithm (e.g., "ECDSA_P256")
+  repeated KeyUsage usages = 4;  // Allowed usages for the key
+  bool exportable = 5;  // Whether the key can be exported
+  uint64 expiry_timestamp_ms = 6;  // When the key expires
+  string storage_location = 7;  // Where to store the key
+}
+
+// KeyPairGenerationResponse represents the result of key pair generation
+message KeyPairGenerationResponse {
+  bool success = 1;  // Whether generation succeeded
+  string key_id = 2;  // Identifier of the generated key
+  bytes public_key = 3;  // Public key data
+  string error_message = 4;  // Error message if generation failed
+}
+
+// HardwareSecureRandomRequest represents a request for secure random data
+message HardwareSecureRandomRequest {
+  uint32 num_bytes = 1;  // Number of bytes to generate
+  string source = 2;  // Source of randomness (e.g., "HARDWARE", "TEE")
+}
+
+// HardwareSecureRandomResponse represents the result of secure random generation
+message HardwareSecureRandomResponse {
+  bool success = 1;  // Whether generation succeeded
+  bytes random_data = 2;  // Generated random data
+  string error_message = 3;  // Error message if generation failed
+  string source_used = 4;  // Source of randomness used
+}
+
+// Enhanced time verification for high-security operations
+message TimestampProof {
+  int64 timestamp_ms = 1;  // Timestamp in milliseconds
+  bytes signature = 2;  // Cryptographic signature of the timestamp
+  string signing_authority = 3;  // Who signed the timestamp
+  bytes additional_proof = 4;  // Additional proof data (e.g., TSA response)
+  repeated string verification_sources = 5;  // Sources that verified the timestamp
+  uint32 confidence_score = 6;  // Confidence score (0-100)
+} 

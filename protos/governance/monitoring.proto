@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package juicetokens.governance;
+
+import "governance/versioning.proto";
+
+// Monitoring service configuration
+message MonitoringConfiguration {
+  uint32 metric_collection_interval_seconds = 1;  // How often to collect metrics
+  bool collect_system_metrics = 2;  // Whether to collect system metrics
+  bool collect_business_metrics = 3;  // Whether to collect business metrics
+  bool collect_network_metrics = 4;  // Whether to collect network metrics
+  uint32 retention_days = 5;  // How long to retain metrics
+  repeated string enabled_alerts = 6;  // Enabled alert types
+}
+
+// Alert definition
+message AlertDefinition {
+  string alert_id = 1;  // Unique identifier for the alert
+  string name = 2;  // Human readable name
+  string description = 3;  // Description of what the alert means
+  string metric_id = 4;  // Metric to monitor
+  string condition = 5;  // Condition expression (e.g., "> 0.9")
+  uint32 severity = 6;  // Alert severity (0-3: info, warning, error, critical)
+  uint32 duration_seconds = 7;  // How long condition must be true before alerting
+  repeated string notification_channels = 8;  // Where to send notifications
+}
+
+// Alert instance
+message Alert {
+  string alert_id = 1;  // Alert definition ID
+  string instance_id = 2;  // Instance where alert was triggered
+  uint64 start_timestamp_ms = 3;  // When alert started
+  uint64 last_updated_ms = 4;  // When alert was last updated
+  string current_value = 5;  // Current value that triggered the alert
+  uint32 severity = 6;  // Alert severity
+  AlertStatus status = 7;  // Current status
+}
+
+// Alert status
+enum AlertStatus {
+  FIRING = 0;  // Alert is actively firing
+  RESOLVED = 1;  // Alert was resolved
+  ACKNOWLEDGED = 2;  // Alert was acknowledged
+  SILENCED = 3;  // Alert is silenced
+}
+
+// Performance metrics
+message PerformanceMetrics {
+  string component = 1;  // Component being measured
+  double average_response_time_ms = 2;  // Average response time
+  double p95_response_time_ms = 3;  // 95th percentile response time
+  double p99_response_time_ms = 4;  // 99th percentile response time
+  double request_rate = 5;  // Requests per second
+  double error_rate = 6;  // Error rate (0.0-1.0)
+  uint64 timestamp_ms = 7;  // When metrics were collected
+}
+
+// Business metrics
+message BusinessMetrics {
+  uint32 active_users = 1;  // Number of active users
+  uint32 token_transactions = 2;  // Number of token transactions
+  uint64 token_volume = 3;  // Volume of tokens transacted
+  uint32 new_users = 4;  // Number of new users
+  uint32 renewals_processed = 5;  // Number of renewals processed
+  uint32 attestations_created = 6;  // Number of attestations created
+  uint64 timestamp_ms = 7;  // When metrics were collected
+  map<string, double> custom_metrics = 8;  // Custom business metrics
+}
+
+// Aggregated system health report
+message HealthReport {
+  juicetokens.governance.SystemHealth system_health = 1;  // Overall system health
+  repeated Alert active_alerts = 2;  // Currently active alerts
+  PerformanceMetrics performance = 3;  // Performance metrics
+  BusinessMetrics business = 4;  // Business metrics
+  uint64 report_timestamp_ms = 5;  // When report was generated
+  string report_id = 6;  // Unique report identifier
+}
+
+// Monitoring snapshot request
+message MonitoringSnapshotRequest {
+  string instance_id = 1;  // Instance to get snapshot from
+  repeated string metric_types = 2;  // Types of metrics to include
+  bool include_alerts = 3;  // Whether to include alerts
+  uint32 lookback_minutes = 4;  // How far back to look
+}
+
+// Monitoring snapshot response
+message MonitoringSnapshotResponse {
+  HealthReport report = 1;  // Health report
+  map<string, bytes> raw_metrics = 2;  // Raw metrics data
+  bool complete = 3;  // Whether snapshot is complete
+  string error_message = 4;  // Error message if snapshot failed
+} 

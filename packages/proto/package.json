@@ -1,0 +1,19 @@
+{
+  "name": "@juicetokens/proto",
+  "version": "0.1.0",
+  "description": "Protocol Buffer definitions for JuiceTokens protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run generate && tsc",
+    "generate": "mkdir -p src/generated && pbjs -t static-module -w commonjs -p ../../protos -o src/generated/proto.js ../../protos/tokenengine.proto ../../protos/token/*.proto ../../protos/foundation/*.proto ../../protos/transport/*.proto ../../protos/trust/*.proto ../../protos/lifecycle/*.proto ../../protos/extension/extension_point.proto ../../protos/extension/registry.proto ../../protos/governance/*.proto && pbts -o src/generated/proto.d.ts src/generated/proto.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "protobufjs": "^7.2.5",
+    "long": "^5.2.3"
+  },
+  "devDependencies": {
+    "protobufjs-cli": "^1.1.2"
+  }
+} 

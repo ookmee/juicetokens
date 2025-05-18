@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package juicetokens.extension;
+
+import "extension/extension_point.proto";
+
+// Registry service for managing extensions
+message ExtensionRegistry {
+  repeated ExtensionEntry extensions = 1;  // All registered extensions
+  uint64 last_updated_ms = 2;  // When registry was last updated
+  string registry_version = 3;  // Registry version
+}
+
+// Entry in the extension registry
+message ExtensionEntry {
+  juicetokens.extension.ExtensionRegistration registration = 1;  // Registration details
+  string publisher_id = 2;  // ID of the extension publisher
+  bytes signature = 3;  // Publisher signature
+  uint64 registration_time_ms = 4;  // When extension was registered
+  uint64 last_updated_ms = 5;  // When entry was last updated
+  ExtensionStatus status = 6;  // Current status
+}
+
+// Status of an extension
+enum ExtensionStatus {
+  ACTIVE = 0;  // Extension is active
+  DISABLED = 1;  // Extension is disabled
+  DEPRECATED = 2;  // Extension is deprecated
+  BLOCKED = 3;  // Extension is blocked
+}
+
+// Discovery request for finding extensions
+message DiscoveryRequest {
+  string query = 1;  // Search query
+  repeated string extension_point_ids = 2;  // Filter by extension points
+  repeated string capabilities = 3;  // Filter by capabilities
+  uint32 max_results = 4;  // Maximum number of results
+  bool include_disabled = 5;  // Whether to include disabled extensions
+}
+
+// Discovery response
+message DiscoveryResponse {
+  repeated ExtensionEntry results = 1;  // Discovery results
+  uint32 total_matches = 2;  // Total number of matches
+  bool has_more = 3;  // Whether there are more results
+}
+
+// Activation request for an extension
+message ActivationRequest {
+  string extension_id = 1;  // Extension ID
+  string user_id = 2;  // User activating the extension
+  map<string, string> activation_parameters = 3;  // Activation parameters
+}
+
+// Activation response
+message ActivationResponse {
+  string extension_id = 1;  // Extension ID
+  bool success = 2;  // Whether activation succeeded
+  string error_message = 3;  // Error message if activation failed
+  string activation_token = 4;  // Token for future calls
+  repeated string required_permissions = 5;  // Permissions required
+} 

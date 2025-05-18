@@ -1,70 +1,87 @@
-# JuiceTokens
+# JuiceTokens Protocol Implementation
 
-A monorepo containing all JuiceTokens components:
-- Protocol definitions and shared types
-- Progressive Web App (PWA)
-- Flutter mobile application
+This repository contains a TypeScript implementation of the JuiceTokens protocol, a layered architecture that enables peer-to-peer value exchange with unique properties such as token denominations, telomere tracking, and a psychosocial development framework.
 
 ## Project Structure
 
-```
-juicetokens/
-├── packages/
-│   ├── protocol/           # Protocol definitions and shared types
-│   │   ├── proto/         # Protobuf definitions
-│   │   └── src/           # Generated TypeScript types
-│   ├── pwa/               # Progressive Web App
-│   │   ├── src/
-│   │   └── public/
-│   └── flutter/           # Flutter mobile app
-│       ├── lib/
-│       └── test/
-├── tools/                 # Shared development tools
-│   ├── scripts/
-│   └── config/
-├── .github/              # CI/CD workflows
-├── docker/              # Docker configurations
-└── docs/               # Project documentation
-```
+The project is organized as a monorepo with the following packages:
 
-## Development Setup
+- **common**: Shared utilities and types
+- **proto**: Protocol Buffer definitions
+- **foundation**: Layer 1 - Core Infrastructure
+- **transport**: Layer 2 - Communication Protocol Stack
+- **token**: Layer 3 - Value Representation
+- **trust**: Layer 4 - Reputation Framework
+- **lifecycle**: Layer 5 - Temporal Value Management
+- **extension**: Layer 6 - Application Integration Points
+- **governance**: Layer 7 - System Evolution Framework
+- **app**: Main application entry point
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Getting Started
 
-2. Build all packages:
-   ```bash
-   npm run build
-   ```
+### Prerequisites
 
-3. Run development servers:
-   ```bash
-   npm run dev
-   ```
+- Node.js 18 or higher
+- npm 7 or higher
+- Docker (optional, for containerized development)
 
-## Testing
+### Installation
 
-Run tests for all packages:
+Clone the repository and install dependencies:
+
 ```bash
-npm test
+git clone https://github.com/yourusername/juicetokens.git
+cd juicetokens
+npm install
 ```
 
-## Building for Production
+### Build
 
-Build all packages for production:
+Build the TypeScript code and Protocol Buffer definitions:
+
 ```bash
 npm run build
 ```
 
-## Contributing
+### Run
 
-1. Create a new branch for your feature
-2. Make your changes
-3. Run tests and linting
-4. Submit a pull request
+Start the application:
+
+```bash
+npm start
+```
+
+Or using Docker:
+
+```bash
+npm run start:detached
+```
+
+## Development
+
+### Adding Protocol Buffer Definitions
+
+1. Add `.proto` files to the appropriate subdirectory in the `protos/` directory
+2. Run `npm run build:proto` to generate TypeScript types
+
+### Running Tests
+
+```bash
+npm test
+```
+
+## Docker Support
+
+The project includes Docker support for easy deployment and testing:
+
+```bash
+# Build and start the Docker container
+npm run start:detached
+
+# Stop the Docker container
+npm run stop
+```
 
 ## License
 
-ISC
+[Add License Information]

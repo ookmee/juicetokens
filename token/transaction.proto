@@ -1,0 +1,207 @@
+syntax = "proto3";
+
+package juicetokens.token.transaction;
+
+import "token/model.proto";
+
+/**
+ * Transaction Layer Protocol
+ * 
+ * This file defines the four-packet transaction model used in JuiceTokens:
+ * 1. sExo-pak: Sender to receiver (payment tokens)
+ * 2. rExo-pak: Receiver to sender (change tokens)
+ * 3. sRetro-pak: Sender to sender (rollback safety)
+ * 4. rRetro-pak: Receiver to receiver (rollback safety)
+ * 
+ * This design ensures atomic transactions (all-or-nothing) even with connection
+ * failures or interruptions, providing robust transaction safety in offline
+ * and unreliable network environments.
+ */
+
+// ExoPak represents a package of tokens transferred between users
+message ExoPak {
+  string pak_id = 1;  // Unique package identifier
+  string sender_id = 2;  // Sender's identifier
+  string receiver_id = 3;  // Receiver's identifier
+  repeated juicetokens.token.model.Token tokens = 4;  // Tokens in the package
+  TransactionContext context = 5;  // Transaction context
+  PakType pak_type = 6;  // Type of package
+  PakStatus status = 7;  // Status of the package
+}
+
+// PakType defines the direction and purpose of a token package
+enum PakType {
+  // Primary transfer packets:
+  S_EXO_PAK = 0;  // Sender to receiver (payment tokens)
+  R_EXO_PAK = 1;  // Receiver to sender (change tokens)
+  
+  // Safety/rollback packets:
+  S_RETRO_PAK = 2;  // Sender to sender (rollback safety)
+  R_RETRO_PAK = 3;  // Receiver to receiver (rollback safety)
+}
+
+// PakStatus tracks the current state of a token package
+enum PakStatus {
+  CREATED = 0;     // Package created
+  SENT = 1;        // Package sent
+  RECEIVED = 2;    // Package received
+  ACCEPTED = 3;    // Package accepted
+  REJECTED = 4;    // Package rejected
+  FINALIZED = 5;   // Package finalized
+  CANCELED = 6;    // Package canceled
+  TIMEDOUT = 7;    // Package timed out
+}
+
+// TransactionContext contains metadata for a transaction
+message TransactionContext {
+  string transaction_id = 1;  // Unique transaction identifier
+  uint64 timestamp_ms = 2;  // Timestamp of transaction
+  string message = 3;  // Optional message
+  map<string, string> metadata = 4;  // Additional metadata
+  uint32 timeout_seconds = 5;  // Transaction timeout
+}
+
+// RetroPak represents a safety package for transaction rollback
+message RetroPak {
+  string pak_id = 1;  // Unique package identifier
+  string owner_id = 2;  // Owner's identifier
+  repeated juicetokens.token.model.Token tokens = 3;  // Tokens in the package
+  TransactionContext context = 4;  // Transaction context
+  PakType pak_type = 5;  // Type of package (S_RETRO_PAK or R_RETRO_PAK)
+  PakStatus status = 6;  // Status of the package
+}
+
+/**
+ * Atomic Commitment Protocol
+ * 
+ * The atomic commitment protocol ensures transactions are all-or-nothing,
+ * even in the face of connection failures or interruptions. It uses a
+ * multi-phase commit approach with the four-packet model to ensure
+ * transaction integrity in offline environments.
+ */
+
+// TransactionInitiation begins a new token transaction
+message TransactionInitiation {
+  string transaction_id = 1;  // Transaction identifier
+  string sender_id = 2;  // Sender identifier
+  string receiver_id = 3;  // Receiver identifier
+  uint64 amount = 4;  // Transaction amount
+  juicetokens.token.model.WisselToken wisseltoken = 5;  // WisselToken for exact amount
+  DenominationVectorClock vector_clock = 6;  // Denomination status for optimization
+}
+
+// DenominationVectorClock optimizes token selection during transactions
+message DenominationVectorClock {
+  map<uint32, uint32> denomination_status = 1;  // Denomination to status mapping
+  string user_id = 2;  // User identifier
+  uint64 timestamp_ms = 3;  // Timestamp when the clock was updated
+  
+  // Key: Denomination value (1, 2, 5, 10, 20, 50, 100, 200, 500)
+  // Value: Status code using 2-bit encoding:
+  //   00 (0) = Lack (shortage)
+  //   01 (1) = Slightly wanting
+  //   10 (2) = Good (optimal)
+  //   11 (3) = Excess (abundance)
+  
+  // This clock communicates denomination distribution status between peers,
+  // helping optimize token selection for better denomination balance.
+  // The ideal is approximately five tokens of each denomination with
+  // fewer high-value tokens.
+}
+
+// TransactionPreparation coordinates the preparation phase
+message TransactionPreparation {
+  string transaction_id = 1;  // Transaction identifier
+  bool sender_prepared = 2;  // Whether sender is prepared
+  bool receiver_prepared = 3;  // Whether receiver is prepared
+  string s_exo_pak_id = 4;  // Sender's exo-pak identifier
+  string r_exo_pak_id = 5;  // Receiver's exo-pak identifier
+  string s_retro_pak_id = 6;  // Sender's retro-pak identifier
+  string r_retro_pak_id = 7;  // Receiver's retro-pak identifier
+}
+
+// TransactionCommitment finalizes a successful transaction
+message TransactionCommitment {
+  string transaction_id = 1;  // Transaction identifier
+  uint64 finalization_timestamp_ms = 2;  // Finalization timestamp
+  bytes sender_finalization_signature = 3;  // Sender's finalization signature
+  bytes receiver_finalization_signature = 4;  // Receiver's finalization signature
+  bool success = 5;  // Whether commitment succeeded
+}
+
+// TransactionAbort handles failed transactions
+message TransactionAbort {
+  string transaction_id = 1;  // Transaction identifier
+  string reason = 2;  // Reason for abortion
+  uint64 abort_timestamp_ms = 3;  // Abort timestamp
+  bool sender_acknowledged = 4;  // Whether sender acknowledged
+  bool receiver_acknowledged = 5;  // Whether receiver acknowledged
+}
+
+/**
+ * Token Flow Management
+ * 
+ * These messages handle the management of token portfolios, including
+ * selection strategies, balance constraints, and change calculation.
+ */
+
+// BalanceVerification checks token sufficiency for a transaction
+message BalanceVerification {
+  string owner_id = 1;  // Owner identifier
+  uint64 total_value = 2;  // Total value of tokens
+  repeated DenominationCount denomination_counts = 3;  // Counts by denomination
+  bool sufficient_for_amount = 4;  // Whether sufficient for specified amount
+  uint64 requested_amount = 5;  // Requested amount
+}
+
+// TokenSelectionConstraint enforces minimum balance and token spending rules
+message TokenSelectionConstraint {
+  bool enforce_min_account_balance = 1;  // Whether to enforce minimum account balance
+  uint32 min_tokens_required = 2;  // Minimum tokens required (default: 2)
+  bool protect_last_issuance_tokens = 3;  // Whether to protect last tokens of an issuance
+  string issuance_id = 4;  // Issuance identifier (LOCATION-REFERENCE)
+  uint32 issuance_min_tokens = 5;  // Minimum tokens per issuance (default: 2)
+  
+  // These constraints ensure:
+  // 1. Users maintain a minimum account balance (typically >2 tokens)
+  // 2. The WisselToken is protected from being spent if it would leave fewer
+  //    than the minimum required tokens from a given issuance
+  // 3. This creates an "all or nothing" rule for the final tokens of an issuance,
+  //    preventing partial spending that would strand the afrondingsbuffer
+}
+
+// DenominationCount tracks the number of tokens of a specific denomination
+message DenominationCount {
+  uint32 denomination = 1;  // Denomination value
+  uint32 count = 2;  // Number of tokens
+}
+
+// TokenSelectionStrategy defines how tokens are selected for transactions
+message TokenSelectionStrategy {
+  enum Strategy {
+    MINIMIZE_TOKENS = 0;  // Use largest denominations first
+    OPTIMIZE_DISTRIBUTION = 1;  // Balance denomination distribution
+    EXACT_MATCH = 2;  // Try to find exact denomination matches
+    FAVOR_EXPIRING = 3;  // Prioritize soon-to-expire tokens
+  }
+  Strategy strategy = 1;  // Selected strategy
+  map<uint32, float> denomination_weights = 2;  // Custom weights by denomination
+  TokenSelectionConstraint constraints = 3;  // Account balance and spending constraints
+}
+
+// ChangeCalculation determines payment and change token allocation
+message ChangeCalculation {
+  uint64 total_amount = 1;  // Total amount to pay
+  uint64 payment_amount = 2;  // Amount covered by payment tokens
+  uint64 change_amount = 3;  // Amount to return as change
+  float buffer_amount = 4;  // Amount for the afrondingsbuffer (0.0-0.99)
+  repeated DenominationCount payment_denominations = 5;  // Payment denomination breakdown
+  repeated DenominationCount change_denominations = 6;  // Change denomination breakdown
+}
+
+// Special fields for test implementation
+message TestTokenGeneration {
+  string test_user_id = 1;  // Test user identifier
+  uint64 total_value = 2;  // Total value to generate
+  repeated DenominationCount denomination_distribution = 3;  // Desired distribution
+} 

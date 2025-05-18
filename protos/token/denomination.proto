@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+package juicetokens.token.denomination;
+
+option go_package = "github.com/juicetokens/protos/token/denomination";
+
+import "token/model.proto";
+
+// DenominationDistribution tracks the distribution of token denominations
+message DenominationDistribution {
+  // Counts of tokens by denomination
+  map<uint32, uint32> denomination_counts = 1;  // Map of denomination to count
+  
+  // Total value represented by this distribution
+  uint64 total_value = 2;
+  
+  // Total number of tokens
+  uint32 total_tokens = 3;
+  
+  // Owner identifier
+  string owner_id = 4;
+  
+  // Last updated timestamp in milliseconds
+  uint64 last_updated_ms = 5;
+}
+
+// DenominationStatus represents the status of a particular denomination
+message DenominationStatus {
+  // The denomination value
+  uint32 denomination = 1;
+  
+  // Current count of tokens with this denomination
+  uint32 count = 2;
+  
+  // Ideal count for this denomination based on optimized distribution
+  uint32 ideal_count = 3;
+  
+  // Status code:
+  //   0 = Lack (shortage)
+  //   1 = Slightly wanting
+  //   2 = Good (optimal)
+  //   3 = Excess (abundance)
+  uint32 status_code = 4;
+  
+  // Difference between current and ideal count
+  int32 delta = 5;
+}
+
+// DenominationOptimization provides strategies for optimizing denomination distribution
+message DenominationOptimization {
+  // Optimization target type
+  enum OptimizationType {
+    MINIMIZE_TOKENS = 0;       // Use largest denominations first (fewer tokens)
+    BALANCE_DISTRIBUTION = 1;  // Create balanced distribution across denominations
+    EXACT_MATCH = 2;           // Try to find exact denomination matches
+    FAVOR_EXPIRING = 3;        // Prioritize soon-to-expire tokens
+  }
+  
+  // Selected optimization type
+  OptimizationType type = 1;
+  
+  // Custom weights for each denomination (if using custom weighting)
+  map<uint32, float> denomination_weights = 2;
+  
+  // Transaction constraints for token selection
+  TokenSelectionConstraint constraints = 3;
+  
+  // Target distribution to achieve
+  DenominationDistribution target_distribution = 4;
+}
+
+// TokenSelectionConstraint defines rules for token selection during transactions
+message TokenSelectionConstraint {
+  // Whether to enforce minimum account balance
+  bool enforce_min_account_balance = 1;
+  
+  // Minimum tokens required (default: 2)
+  uint32 min_tokens_required = 2;
+  
+  // Whether to protect last tokens of an issuance
+  bool protect_last_issuance_tokens = 3;
+  
+  // Issuance identifier (LOCATION-REFERENCE)
+  string issuance_id = 4;
+  
+  // Minimum tokens per issuance (default: 2)
+  uint32 issuance_min_tokens = 5;
+  
+  // IMPORTANT CONSTRAINTS:
+  // 1. When a user tries to spend tokens from their portfolio, these constraints
+  //    ensure that a minimum account balance is maintained (typically >2 tokens)
+  // 2. The Wisseltoken is protected from being spent if it would leave fewer
+  //    than the specified minimum tokens from a given issuance
+  // 3. This creates an "all or nothing" rule for the final tokens of an issuance
+}
+
+// DenominationVectorClock is used for optimizing token selection during transactions
+message DenominationVectorClock {
+  // Denomination status mapping
+  // Key: Denomination value (1, 2, 5, 10, 20, 50, 100, 200, 500)
+  // Value: Status code using 2-bit encoding:
+  //   00 (0) = Lack (shortage)
+  //   01 (1) = Slightly wanting
+  //   10 (2) = Good (optimal)
+  //   11 (3) = Excess (abundance)
+  map<uint32, uint32> denomination_status = 1;
+  
+  // User identifier
+  string user_id = 2;
+  
+  // Timestamp when the clock was updated in milliseconds
+  uint64 timestamp_ms = 3;
+  
+  // Note: DenominationVectorClock is used for optimizing token selection during transactions
+  // by communicating denomination differentials. It calculates the ideal distribution
+  // (approximately five tokens of each denomination with fewer high-value tokens)
+  // and helps peers make better token selection decisions during transactions.
+}
+
+// DenominationTransformation represents the change in denomination distribution
+// during a transaction or conversion
+message DenominationTransformation {
+  // Initial distribution before transformation
+  DenominationDistribution initial = 1;
+  
+  // Final distribution after transformation
+  DenominationDistribution final = 2;
+  
+  // Type of transformation
+  enum TransformationType {
+    MERGE = 0;     // Merging smaller denominations into larger ones
+    SPLIT = 1;     // Splitting larger denominations into smaller ones
+    EXCHANGE = 2;  // Exchanging denominations without changing total value
+    PAYMENT = 3;   // Movement of tokens during payment
+    CHANGE = 4;    // Return of change during payment
+  }
+  
+  // Transformation type
+  TransformationType type = 3;
+  
+  // Transaction identifier if this transformation is part of a transaction
+  string transaction_id = 4;
+  
+  // Timestamp of transformation in milliseconds
+  uint64 timestamp_ms = 5;
+}
+
+// DenominationMix represents the optimal mix of denominations for a particular value
+message DenominationMix {
+  // Target value to represent
+  uint64 value = 1;
+  
+  // Denomination counts required
+  map<uint32, uint32> counts = 2;
+  
+  // Total number of tokens used
+  uint32 total_tokens = 3;
+  
+  // Whether this is the optimal solution
+  bool is_optimal = 4;
+  
+  // Alternative solutions if the optimal solution is not available
+  repeated DenominationMix alternatives = 5;
+}
+
+// ChangeCalculation determines how change should be returned during a transaction
+message ChangeCalculation {
+  // Total amount to pay
+  uint64 total_amount = 1;
+  
+  // Amount covered by payment tokens
+  uint64 payment_amount = 2;
+  
+  // Amount to return as change
+  uint64 change_amount = 3;
+  
+  // Amount for the afrondingsbuffer (0.0-0.99)
+  float buffer_amount = 4;
+  
+  // Payment denomination breakdown
+  map<uint32, uint32> payment_denominations = 5;
+  
+  // Change denomination breakdown
+  map<uint32, uint32> change_denominations = 6;
+  
+  // Transaction identifier
+  string transaction_id = 7;
+  
+  // Timestamp in milliseconds
+  uint64 timestamp_ms = 8;
+} 
