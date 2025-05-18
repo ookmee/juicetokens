@@ -9,6 +9,7 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - ./ssl:/etc/nginx/ssl
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
       - grafana
