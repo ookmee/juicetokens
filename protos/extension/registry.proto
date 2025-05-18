@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package juicetokens.extension;
 
-import "extension/extension_point.proto";
+import "extension_point.proto";
 
 // Registry service for managing extensions
 message ExtensionRegistry {

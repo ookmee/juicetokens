@@ -16,7 +16,9 @@ const protosDir = path.resolve(__dirname, '../protos');
 try {
   // Generate JavaScript from .proto files
   console.log('Generating JavaScript from Protocol Buffers...');
-  execSync(`npx pbjs -t static-module -w commonjs -o ${generatedDir}/proto.js ${protosDir}/**/*.proto`, {
+  
+  // Use a more explicit path pattern to avoid path resolution issues
+  execSync(`npx pbjs -t static-module -w commonjs -o ${generatedDir}/proto.js --path=${protosDir} "${protosDir}"/*.proto "${protosDir}"/*/**.proto`, {
     stdio: 'inherit'
   });
 
