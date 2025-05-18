@@ -10,7 +10,6 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
-  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 
   // The root directory for Jest
@@ -19,6 +18,7 @@ module.exports = {
   // Test files pattern
   testMatch: [
     '<rootDir>/tests/**/*.test.js',
+    '<rootDir>/tests/**/*.test.ts',
     '<rootDir>/packages/**/*.test.ts'
   ],
 

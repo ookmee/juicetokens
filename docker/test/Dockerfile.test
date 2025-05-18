@@ -1,0 +1,36 @@
+FROM node:18-alpine
+
+# Install additional tools needed for testing
+RUN apk add --no-cache curl jq bash netcat-openbsd procps
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+COPY packages/*/package.json ./packages/
+
+# Create necessary directory structure
+RUN mkdir -p packages && \
+    find packages -maxdepth 1 -mindepth 1 -type d -exec mkdir -p {}/dist \;
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build TypeScript code and protocol buffers
+RUN npm run build
+
+# Add test scripts
+COPY docker/test/scripts /app/scripts
+RUN chmod +x /app/scripts/*.sh
+
+# Set environment variables
+ENV NODE_ENV=test
+
+# Expose ports
+EXPOSE 4242 3000 9090 9100
+
+# Default command
+CMD ["/bin/bash", "/app/scripts/start-node.sh"] 

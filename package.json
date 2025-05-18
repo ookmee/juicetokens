@@ -21,7 +21,8 @@
   ],
   "dependencies": {
     "long": "^5.2.3",
-    "protobufjs": "^7.2.5"
+    "protobufjs": "^7.2.5",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
@@ -30,6 +31,7 @@
     "@jest/globals": "^29.5.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^18.16.16",
+    "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^8.42.0",

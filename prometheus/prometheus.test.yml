@@ -1,0 +1,57 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: 'juicetokens-nodes'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node1:3000', 'node2:3000', 'node3:3000', 'node4:3000']
+        labels:
+          group: 'juicetokens-nodes'
+
+  - job_name: 'node1'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node1:3000']
+        labels:
+          node: 'primary'
+          role: 'primary'
+
+  - job_name: 'node2'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node2:3000']
+        labels:
+          node: 'secondary'
+          role: 'secondary'
+
+  - job_name: 'node3'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node3:3000']
+        labels:
+          node: 'recovery'
+          role: 'secondary'
+
+  - job_name: 'node4'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['node4:3000']
+        labels:
+          node: 'monitor'
+          role: 'monitor'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+rule_files:
+  # - "alert_rules.yml" 

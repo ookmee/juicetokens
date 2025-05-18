@@ -1,0 +1,172 @@
+version: '3.8'
+
+services:
+  # Primary node
+  node1:
+    build:
+      context: ../..
+      dockerfile: docker/test/Dockerfile.test
+    container_name: juicetokens-node1
+    ports:
+      - "4242:4242"
+      - "3000:3000"
+    volumes:
+      - node1_data:/app/data
+    environment:
+      - NODE_ENV=test
+      - NODE_ID=node1
+      - NODE_ROLE=primary
+      - INIT_TEST_DATA=true
+      - TEST_SCENARIO=default
+      - LOG_LEVEL=info
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.11
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Secondary node
+  node2:
+    build:
+      context: ../..
+      dockerfile: docker/test/Dockerfile.test
+    container_name: juicetokens-node2
+    ports:
+      - "4243:4242"
+      - "3001:3000"
+    volumes:
+      - node2_data:/app/data
+    environment:
+      - NODE_ENV=test
+      - NODE_ID=node2
+      - NODE_ROLE=secondary
+      - INIT_TEST_DATA=true
+      - TEST_SCENARIO=default
+      - LOG_LEVEL=info
+      - WAIT_FOR_SERVICE=node1:4242
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.12
+    depends_on:
+      - node1
+
+  # Recovery testing node
+  node3:
+    build:
+      context: ../..
+      dockerfile: docker/test/Dockerfile.test
+    container_name: juicetokens-node3
+    ports:
+      - "4244:4242"
+      - "3002:3000"
+    volumes:
+      - node3_data:/app/data
+    environment:
+      - NODE_ENV=test
+      - NODE_ID=node3
+      - NODE_ROLE=secondary
+      - INIT_TEST_DATA=true
+      - TEST_SCENARIO=failure
+      - LOG_LEVEL=debug
+      - WAIT_FOR_SERVICE=node1:4242
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.13
+    depends_on:
+      - node1
+
+  # Monitoring node
+  node4:
+    build:
+      context: ../..
+      dockerfile: docker/test/Dockerfile.test
+    container_name: juicetokens-node4
+    ports:
+      - "4245:4242"
+      - "3003:3000"
+    volumes:
+      - node4_data:/app/data
+    environment:
+      - NODE_ENV=test
+      - NODE_ID=node4
+      - NODE_ROLE=monitor
+      - INIT_TEST_DATA=false
+      - LOG_LEVEL=info
+      - WAIT_FOR_SERVICE=node1:4242
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.14
+    depends_on:
+      - node1
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: juicetokens-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.21
+    extra_hosts:
+      - "node1:172.28.0.11"
+      - "node2:172.28.0.12"
+      - "node3:172.28.0.13"
+      - "node4:172.28.0.14"
+    restart: unless-stopped
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: juicetokens-grafana
+    ports:
+      - "3500:3000"
+    volumes:
+      - ../../grafana/provisioning:/etc/grafana/provisioning
+      - ../../grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3500
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.22
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Network simulator for testing network conditions
+  network-simulator:
+    image: alpine:latest
+    container_name: juicetokens-network-sim
+    cap_add:
+      - NET_ADMIN
+    entrypoint: sh -c "apk add --no-cache iproute2 bash && while true; do sleep 3600; done"
+    networks:
+      juicetokens_test:
+        ipv4_address: 172.28.0.30
+    restart: unless-stopped
+
+networks:
+  juicetokens_test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  node1_data:
+  node2_data:
+  node3_data:
+  node4_data:
+  prometheus_data:
+  grafana_data: 
