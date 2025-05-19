@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  test-user-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-user
+    container_name: juicetokens-test-user-1
+    ports:
+      - "3001:3000"
+    command: ["--port=3000", "--user-id=test-user-1"]
+    networks:
+      - juicetokens-test-net
+    volumes:
+      - ./public:/app/public:ro
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  test-user-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-user
+    container_name: juicetokens-test-user-2
+    ports:
+      - "3002:3000"
+    command: ["--port=3000", "--user-id=test-user-2"]
+    networks:
+      - juicetokens-test-net
+    volumes:
+      - ./public:/app/public:ro
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  test-user-3:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-user
+    container_name: juicetokens-test-user-3
+    ports:
+      - "3003:3000"
+    command: ["--port=3000", "--user-id=test-user-3"]
+    networks:
+      - juicetokens-test-net
+    volumes:
+      - ./public:/app/public:ro
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  juicetokens-test-net:
+    driver: bridge
+    name: juicetokens-test-network 

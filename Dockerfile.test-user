@@ -1,0 +1,30 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+RUN npm install express commander fs
+
+# Copy application files
+COPY scripts/start-test-user.js ./
+COPY public ./public
+
+# Create necessary directory structure
+RUN mkdir -p /app/public/js/services
+
+# Add a fallback index.html in case the volume mount doesn't work
+RUN mkdir -p /app/public && \
+    echo '<!DOCTYPE html><html><head><title>JuiceTokens</title></head><body><h1>JuiceTokens Test User</h1><p>If you see this page, the Docker container is running but the volume mount may have failed.</p></body></html>' > /app/public/index.html
+
+# Create a dedicated health check script
+RUN echo '#!/bin/sh\nwget -q --spider http://localhost:3000/health || exit 1' > /healthcheck.sh && \
+    chmod +x /healthcheck.sh
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD /healthcheck.sh
+
+EXPOSE 3000
+
+# Command to run when container starts
+ENTRYPOINT ["node", "start-test-user.js"] 

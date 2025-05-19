@@ -40,6 +40,37 @@
             color: var(--color-token);
         }
         
+        .layer-section {
+            background: white;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        
+        .layer-title {
+            font-weight: bold;
+            color: var(--color-trust);
+            margin-bottom: 8px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+        }
+        
+        .feature-item {
+            padding: 8px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .feature-item:hover {
+            background-color: #e8e8e8;
+        }
+        
         .feed-section {
             background: white;
             padding: 16px;
@@ -97,6 +128,31 @@
             color: var(--color-trust);
         }
         
+        .test-user-banner {
+            background-color: var(--color-trust);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+        }
+        
+        .status-verified {
+            color: green;
+            font-weight: bold;
+        }
+        
+        .trust-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-trust);
+        }
+        
+        .notification {
+            color: #ff6b00;
+            font-size: 0.9em;
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -116,24 +172,6 @@
             max-width: 400px;
             width: 100%;
         }
-        
-        .peer-bubble {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: var(--color-trust);
-            display: inline-block;
-            margin-right: 8px;
-        }
-        
-        .test-user-banner {
-            background-color: var(--color-trust);
-            color: white;
-            text-align: center;
-            padding: 8px;
-            border-radius: var(--border-radius);
-            margin-bottom: 16px;
-        }
     </style>
 </head>
 <body>
@@ -147,10 +185,101 @@
     </header>
     
     <main>
+        <!-- Layer 1: Foundation -->
+        <section class="layer-section">
+            <div class="layer-title">Layer 1: Foundation</div>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    Time Source Status
+                    <div class="status-verified">✓ Verified</div>
+                </div>
+                <div class="feature-item">Device Capabilities</div>
+                <div class="feature-item">Request Permissions</div>
+                <div class="feature-item">
+                    Storage Usage
+                    <div>23.4 KB</div>
+                </div>
+            </div>
+            <div style="margin-top: 8px;">Current Time Source: System Clock</div>
+        </section>
+        
+        <!-- Layer 2: Transport -->
+        <section class="layer-section">
+            <div class="layer-title">Layer 2: Transport</div>
+            <div class="feature-grid">
+                <div class="feature-item">QR Kiss</div>
+                <div class="feature-item">BLE/NFC</div>
+                <div class="feature-item">Web</div>
+                <div class="feature-item">QR Code</div>
+                <div class="feature-item">Scan QR Code</div>
+            </div>
+        </section>
+        
+        <!-- Layer 3: Core Token -->
+        <section class="layer-section">
+            <div class="layer-title">Layer 3: Core Token</div>
+            <div class="feature-grid">
+                <div class="feature-item">Tokens</div>
+                <div class="feature-item">History</div>
+            </div>
+        </section>
+        
+        <!-- Layer 4: Trust & Attestation -->
+        <section class="layer-section">
+            <div class="layer-title">Layer 4: Trust & Attestation</div>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    Your Trust Score
+                    <div class="trust-score">72%</div>
+                </div>
+                <div class="feature-item">Transaction History</div>
+                <div class="feature-item">Peer Attestations</div>
+                <div class="feature-item">Identity Verification</div>
+                <div class="feature-item">Create Attestation</div>
+                <div class="feature-item">View Attestations</div>
+            </div>
+        </section>
+        
+        <!-- Layer 5: Token Lifecycle -->
+        <section class="layer-section">
+            <div class="layer-title">Layer 5: Token Lifecycle</div>
+            <div class="feature-grid">
+                <div class="feature-item">Genesis Pool Participation</div>
+                <div class="feature-item">Join Pool</div>
+                <div class="feature-item">
+                    Token Renewals
+                    <div class="notification">5 tokens expiring soon</div>
+                    <div class="notification">3 renewals pending</div>
+                </div>
+                <div class="feature-item">Manage Renewals</div>
+                <div class="feature-item">Create Promise</div>
+                <div class="feature-item">Escrow Tokens</div>
+            </div>
+        </section>
+        
         <section class="feed-section">
             <h2>Advertisement Feed</h2>
-            <div id="feed-container"></div>
-            <div id="feed-loading">Loading advertisements...</div>
+            <div id="feed-container">
+                <div class="advertisement">
+                    <div class="advertisement-header">
+                        <div class="advertisement-type">OFFER</div>
+                        <div>Alice</div>
+                    </div>
+                    <h3>Fresh vegetables from my garden</h3>
+                    <p>Organic tomatoes, lettuce, and carrots available weekly.</p>
+                    <div>Value: 25 tokens</div>
+                </div>
+                
+                <div class="advertisement">
+                    <div class="advertisement-header">
+                        <div class="advertisement-type">REQUEST</div>
+                        <div>Bob</div>
+                    </div>
+                    <h3>Need help with garden work</h3>
+                    <p>Looking for someone to help with weeding and planting.</p>
+                    <div>Value: 40 tokens</div>
+                </div>
+            </div>
         </section>
         
         <div class="actions">
@@ -201,6 +330,15 @@
         </div>
     </div>
     
+    <!-- Load service provider first -->
+    <script src="js/service-provider.js"></script>
+    
+    <!-- Load service implementations -->
+    <script src="js/services/foundation-services.js"></script>
+    <script src="js/services/communication-services.js"></script>
+    <script src="js/services/token-services.js"></script>
+    
+    <!-- Load main application -->
     <script src="app.js"></script>
 </body>
 </html>
