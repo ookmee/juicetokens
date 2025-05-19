@@ -149,4 +149,4 @@ console.log(`Created ${failingTransactions.length} failing transaction scenarios
 transactions = [...transactions, ...failingTransactions];
 fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
 
-console.log('Added failing transactions to main transaction log.'); 
+console.log('Added failing transactions to main transaction log.');

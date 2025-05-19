@@ -172,4 +172,4 @@ else
     docker-compose -f "$COMPOSE_FILE" up
 fi
 
-echo "JuiceTokens test environment is ready!" 
+echo "JuiceTokens test environment is ready!"

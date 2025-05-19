@@ -54,4 +54,4 @@ alerting:
           # - alertmanager:9093
 
 rule_files:
-  # - "alert_rules.yml" 
+  # - "alert_rules.yml"

@@ -88,4 +88,4 @@ for (let i = 0; i < options.count; i++) {
 const tokensFile = path.join(dataDir, 'tokens.json');
 fs.writeFileSync(tokensFile, JSON.stringify(tokens, null, 2));
 
-console.log(`Created and saved ${tokens.length} tokens to ${tokensFile}`); 
+console.log(`Created and saved ${tokens.length} tokens to ${tokensFile}`);

@@ -343,4 +343,4 @@ case "$SCENARIO" in
     ;;
 esac
 
-echo "Test scenario $SCENARIO completed" 
+echo "Test scenario $SCENARIO completed"

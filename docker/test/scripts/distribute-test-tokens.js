@@ -123,4 +123,4 @@ const transactions = tokens
 const transactionsFile = path.join(dataDir, 'transactions.json');
 fs.writeFileSync(transactionsFile, JSON.stringify(transactions, null, 2));
 
-console.log(`Recorded ${transactions.length} distribution transactions.`); 
+console.log(`Recorded ${transactions.length} distribution transactions.`);

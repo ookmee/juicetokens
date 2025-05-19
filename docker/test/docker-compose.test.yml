@@ -169,4 +169,4 @@ volumes:
   node3_data:
   node4_data:
   prometheus_data:
-  grafana_data: 
+  grafana_data:

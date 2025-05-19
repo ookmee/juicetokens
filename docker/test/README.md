@@ -258,4 +258,4 @@ docker ps | grep network-sim
 
 # Check if network simulator has necessary permissions
 docker exec -it juicetokens-network-sim sh -c "tc -help"
-``` 
+```

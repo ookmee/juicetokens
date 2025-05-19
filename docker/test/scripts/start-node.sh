@@ -45,4 +45,4 @@ case "$NODE_ROLE" in
     echo "Unknown role: $NODE_ROLE. Starting with default configuration..."
     node packages/app/dist/index.js --nodeId=$NODE_ID --logLevel=$LOG_LEVEL
     ;;
-esac 
+esac

@@ -276,4 +276,4 @@ if (isRemoteTransaction) {
 }
 
 // Return transaction ID
-console.log(transactionId); 
+console.log(transactionId);

@@ -33,4 +33,4 @@ ENV NODE_ENV=test
 EXPOSE 4242 3000 9090 9100
 
 # Default command
-CMD ["/bin/bash", "/app/scripts/start-node.sh"] 
+CMD ["/bin/bash", "/app/scripts/start-node.sh"]

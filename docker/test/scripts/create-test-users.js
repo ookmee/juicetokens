@@ -102,4 +102,4 @@ if (options.count > predefinedUsers.length) {
 const usersFile = path.join(dataDir, 'users.json');
 fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 
-console.log(`Created and saved ${users.length} users to ${usersFile}`); 
+console.log(`Created and saved ${users.length} users to ${usersFile}`);

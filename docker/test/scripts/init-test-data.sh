@@ -84,4 +84,4 @@ case "$TEST_SCENARIO" in
     ;;
 esac
 
-echo "Test data initialization completed for node $NODE_ID" 
+echo "Test data initialization completed for node $NODE_ID"
