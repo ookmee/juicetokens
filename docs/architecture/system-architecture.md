@@ -178,22 +178,53 @@ The Governance layer provides oversight and management:
 ```
 Receiver                                        Sender
   │                                               │
-  │  1. TRANSACTION_SEED                          │
+  │◀──────────────── Time Consensus ──────────────▶│
+  │                                               │
+  │  1. Transaction Request w/Vector Clock        │
   │───────────────────────────────────────────────►
   │                                               │
-  │  2. TRANSACTION_INITIATION (sExoPak)          │
+  │  2. Vector Clock Response                     │
   │◄───────────────────────────────────────────────
   │                                               │
-  │  3. TRANSACTION_PREPARATION (rExoPak)         │
+  │                PLANNING PHASE                 │
+  │  [Set expiry time based on consensus]         │
+  │  [Select denominations using vector clocks]   │
+  │                                               │
+  │         SIMULTANEOUS PACKET CREATION          │
+  │                                               │
+  │  Receiver creates:         │     Sender creates:
+  │  - rExoPak (outgoing)      │     - sExoPak (outgoing)
+  │  - rRetroPak (insurance)   │     - sRetroPak (insurance)
+  │  [All with timestamps      │     [All with timestamps
+  │   and signatures]          │      and signatures]
+  │                                               │
+  │  3. EXCHANGE: Initiation (sExoPak)            │
+  │◄───────────────────────────────────────────────
+  │   [Validate timestamp freshness]              │
+  │   [Verify signatures against time consensus]  │
+  │                                               │
+  │  4. EXCHANGE: Preparation (rExoPak)           │
   │───────────────────────────────────────────────►
   │                                               │
-  │  4. TRANSACTION_COMMITMENT (sRetroPak)        │
+  │                VERIFICATION PHASE             │
+  │   [Validate timestamp freshness]              │
+  │   [Verify signatures against time consensus]  │
+  │                                               │
+  │  5. COMMITMENT: Sender signatures + timestamp │
   │◄───────────────────────────────────────────────
   │                                               │
-  │  5. TRANSACTION_FINALIZATION (rRetroPak)      │
+  │  6. FINALIZATION: Receiver confirmation       │
   │───────────────────────────────────────────────►
+  │                                               │
+  │   [Reconfirm time consensus]                  │
+  │   [Record timestamps in telomeer history]     │
+  │                                               │
+  │       TimeoutManager (monitoring entire process)
+  │       [If timeout occurs: automatic rollback using RetroPaks]
   │                                               │
 ```
+
+> **IMPORTANT**: This diagram shows the complete transaction flow with time guarantees. Time consensus is established first, followed by planning with vector clocks to optimize denomination selection. Both parties create their exo-packets (to send) and retro-packets (for insurance) simultaneously with timestamps and signatures. The exchange phase involves validating timestamps and signatures. The commitment phase includes final signatures with timestamps from both parties, with time consensus reconfirmed before finalization. Throughout the process, the TimeoutManager monitors progress, triggering automatic rollback using retro-packets if time limits are exceeded.
 
 The Four-Packet Transaction Model exchanges these key data structures:
 
