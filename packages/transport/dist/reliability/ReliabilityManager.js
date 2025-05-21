@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReliabilityManager = void 0;
 const rxjs_1 = require("rxjs");
 const operators_1 = require("rxjs/operators");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 const uuid_1 = require("uuid");
 /**
  * ReliabilityManager implements reliability and recovery mechanisms for message transmission
@@ -199,8 +199,8 @@ class ReliabilityManager {
         };
         return {
             frameId: (0, uuid_1.v4)(),
-            type: proto_1.FrameType.ACKNOWLEDGMENT,
-            payload: proto_1.Acknowledgment.encode(ack).finish(),
+            type: proto_types_1.FrameType.ACKNOWLEDGMENT,
+            payload: proto_types_1.Acknowledgment.encode(ack).finish(),
             headers: {},
             timestampMs: BigInt(Date.now()),
             compression: 0, // NONE
@@ -230,8 +230,8 @@ class ReliabilityManager {
         };
         return {
             frameId: (0, uuid_1.v4)(),
-            type: proto_1.FrameType.CONTROL,
-            payload: proto_1.RecoveryRequest.encode(request).finish(),
+            type: proto_types_1.FrameType.CONTROL,
+            payload: proto_types_1.RecoveryRequest.encode(request).finish(),
             headers: { 'message-type': 'recovery-request' },
             timestampMs: BigInt(Date.now()),
             compression: 0, // NONE

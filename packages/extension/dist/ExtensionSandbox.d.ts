@@ -14,6 +14,7 @@ export declare class ExtensionSandbox implements IExtensionSandbox {
     id: string;
     state: ExtensionState;
     context: ExtensionContext;
+    private cachedConfig;
     constructor(extension: Extension, logger: Logger, configManager: ExtensionConfigManager, communication: ExtensionCommunication);
     /**
      * Initialize the extension

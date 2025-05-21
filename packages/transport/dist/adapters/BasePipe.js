@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BasePipe = void 0;
 const rxjs_1 = require("rxjs");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 /**
  * Base implementation of the Pipe interface with common functionality
  */
@@ -137,7 +137,7 @@ class BasePipe {
      */
     async sendMessage(message) {
         try {
-            const serialized = proto_1.MessageFrame.encode(message).finish();
+            const serialized = proto_types_1.MessageFrame.encode(message).finish();
             await this.sendData(serialized);
         }
         catch (error) {
@@ -192,7 +192,7 @@ class BasePipe {
         this._status.bytesReceived += data.length;
         this.dataSubject.next(data);
         try {
-            const message = proto_1.MessageFrame.decode(data);
+            const message = proto_types_1.MessageFrame.decode(data);
             this.messageSubject.next(message);
         }
         catch (error) {

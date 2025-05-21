@@ -14,6 +14,13 @@ class ExtensionSandbox {
         this.communication = communication;
         this.state = types_1.ExtensionState.REGISTERED;
         this.id = extension.id;
+        // Create default config for caching
+        this.cachedConfig = {
+            id: this.id,
+            version: '1.0.0',
+            enabled: true,
+            settings: {}
+        };
         // Create extension context
         this.context = {
             extensionId: this.id,
@@ -29,6 +36,8 @@ class ExtensionSandbox {
     async initialize() {
         this.logger.info(`Initializing extension: ${this.id}`);
         try {
+            // Load initial configuration
+            this.cachedConfig = await this.configManager.getConfig(this.id);
             // Register message handler
             if (this.extension.onMessage) {
                 this.communication.registerHandler(this.id, async (message) => {
@@ -98,13 +107,15 @@ class ExtensionSandbox {
      * Update the extension configuration
      */
     async updateConfig(settings) {
-        return this.configManager.updateConfig(this.id, settings);
+        await this.configManager.updateConfig(this.id, settings);
+        // Update cached config
+        this.cachedConfig = await this.configManager.getConfig(this.id);
     }
     /**
      * Get the current extension configuration
      */
-    async getConfig() {
-        return this.configManager.getConfig(this.id);
+    getConfig() {
+        return this.cachedConfig;
     }
     /**
      * Create a scoped logger for the extension

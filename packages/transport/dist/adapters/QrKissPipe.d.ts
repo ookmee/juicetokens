@@ -1,5 +1,5 @@
 import { BasePipe } from './BasePipe';
-import { PipeConfiguration } from '@juicetokens/proto';
+import { PipeConfiguration } from '../proto-types';
 /**
  * QR KISS (Keep It Simple & Secure) pipe implementation
  * Uses QR codes for visual data transfer

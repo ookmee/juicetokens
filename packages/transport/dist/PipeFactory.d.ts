@@ -1,5 +1,5 @@
 import { Pipe } from './types/Pipe';
-import { PipeType, PipeConfiguration } from '@juicetokens/proto';
+import { PipeType, PipeConfiguration } from './proto-types';
 /**
  * Factory class for creating pipe instances
  */

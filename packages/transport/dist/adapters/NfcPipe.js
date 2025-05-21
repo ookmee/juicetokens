@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NfcPipe = void 0;
 const BasePipe_1 = require("./BasePipe");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 const MessageFramer_1 = require("../framing/MessageFramer");
 const ReliabilityManager_1 = require("../reliability/ReliabilityManager");
 /**
@@ -15,7 +15,7 @@ class NfcPipe extends BasePipe_1.BasePipe {
      * @param config Pipe configuration
      */
     constructor(id, config) {
-        super(id, proto_1.PipeType.NFC);
+        super(id, proto_types_1.PipeType.NFC);
         this.nfcAdapter = null;
         this.ndefReader = null;
         this.isReading = false;
@@ -35,7 +35,7 @@ class NfcPipe extends BasePipe_1.BasePipe {
         this.reliabilityManager = new ReliabilityManager_1.ReliabilityManager(async (message) => {
             const frames = this.messageFramer.createFrame(message.payload, message.type, message.headers);
             for (const frame of frames) {
-                const encoded = proto_1.MessageFrame.encode(frame).finish();
+                const encoded = proto_types_1.MessageFrame.encode(frame).finish();
                 await this.doSendData(encoded);
             }
         }, {
@@ -45,7 +45,7 @@ class NfcPipe extends BasePipe_1.BasePipe {
         });
         // Set capabilities based on NFC limitations
         this._capabilities = {
-            pipeType: proto_1.PipeType.NFC,
+            pipeType: proto_types_1.PipeType.NFC,
             maxMessageSizeBytes: nfcConfig?.maxMessageSize ?? 1024,
             maxThroughputBytesPerSecond: 5000, // ~5KB/s (conservative estimate for NFC)
             supportsBidirectional: true,

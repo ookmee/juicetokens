@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebPipe = void 0;
 const BasePipe_1 = require("./BasePipe");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 const MessageFramer_1 = require("../framing/MessageFramer");
 const ReliabilityManager_1 = require("../reliability/ReliabilityManager");
 /**
@@ -15,7 +15,7 @@ class WebPipe extends BasePipe_1.BasePipe {
      * @param config Pipe configuration
      */
     constructor(id, config) {
-        super(id, proto_1.PipeType.WEB);
+        super(id, proto_types_1.PipeType.WEB);
         this.webSocket = null;
         this.abortController = null;
         // Initialize with provided config if available
@@ -32,7 +32,7 @@ class WebPipe extends BasePipe_1.BasePipe {
         this.reliabilityManager = new ReliabilityManager_1.ReliabilityManager(async (message) => {
             const frames = this.messageFramer.createFrame(message.payload, message.type, message.headers);
             for (const frame of frames) {
-                const encoded = proto_1.MessageFrame.encode(frame).finish();
+                const encoded = proto_types_1.MessageFrame.encode(frame).finish();
                 await this.doSendData(encoded);
             }
         }, {
@@ -42,7 +42,7 @@ class WebPipe extends BasePipe_1.BasePipe {
         });
         // Set capabilities based on web connection
         this._capabilities = {
-            pipeType: proto_1.PipeType.WEB,
+            pipeType: proto_types_1.PipeType.WEB,
             maxMessageSizeBytes: 1024 * 1024 * 10, // 10MB (arbitrary large size)
             maxThroughputBytesPerSecond: 1024 * 1024, // 1MB/s (conservative for average connection)
             supportsBidirectional: true,

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageFramer = void 0;
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 const uuid_1 = require("uuid");
 /**
  * MessageFramer handles the framing of messages for transmission
@@ -18,7 +18,7 @@ class MessageFramer {
         this.frameMetadata = new Map();
         this.options = {
             maxChunkSize: options?.maxChunkSize ?? 1024,
-            compressionType: options?.compressionType ?? proto_1.CompressionType.NONE,
+            compressionType: options?.compressionType ?? proto_types_1.CompressionType.NONE,
             protocolVersion: options?.protocolVersion ?? 1
         };
     }
@@ -29,7 +29,7 @@ class MessageFramer {
      * @param headers Optional headers
      * @returns Array of chunked message frames
      */
-    createFrame(payload, type = proto_1.FrameType.DATA, headers = {}) {
+    createFrame(payload, type = proto_types_1.FrameType.DATA, headers = {}) {
         const frameId = (0, uuid_1.v4)();
         const timestamp = Date.now();
         const sequenceNumber = this.nextSequence();

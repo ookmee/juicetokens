@@ -1,5 +1,5 @@
 import { BasePipe } from './BasePipe';
-import { PipeConfiguration } from '@juicetokens/proto';
+import { PipeConfiguration } from '../proto-types';
 /**
  * Web-based pipe implementation using WebSocket or HTTP
  */

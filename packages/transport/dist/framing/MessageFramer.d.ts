@@ -1,4 +1,4 @@
-import { MessageFrame, FrameType, CompressionType } from '@juicetokens/proto';
+import { MessageFrame, FrameType, CompressionType } from '../proto-types';
 /**
  * Options for message framing
  */

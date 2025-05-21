@@ -1,6 +1,5 @@
 import { Observable } from 'rxjs';
-import { PipeType, PipeConfiguration, PipeStatus, PipeCapabilities } from '@juicetokens/proto';
-import { MessageFrame } from '@juicetokens/proto';
+import { PipeType, PipeConfiguration, PipeStatus, PipeCapabilities, MessageFrame } from '../proto-types';
 /**
  * Interface for all transport pipe types (QR, BLE, NFC, Web)
  * Based on pipe.proto protocol definition

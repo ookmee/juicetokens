@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { MessageFrame, Acknowledgment, RecoveryRequest, TransportError } from '@juicetokens/proto';
+import { MessageFrame, Acknowledgment, RecoveryRequest, TransportError } from '../proto-types';
 /**
  * Configuration for the reliability manager
  */

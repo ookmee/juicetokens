@@ -1,5 +1,5 @@
 import { BasePipe } from './BasePipe';
-import { PipeConfiguration } from '@juicetokens/proto';
+import { PipeConfiguration } from '../proto-types';
 /**
  * Bluetooth Low Energy pipe implementation
  */

@@ -1,17 +1,85 @@
-version: '3.8'
+version: '3'
 
 services:
-  web:
-    build: .
+  # Web gateway - hosts the test.juicetokens.com interface
+  gateway:
+    build:
+      context: ./docker/gateway
     ports:
-      - "4242:4242"
-    volumes:
-      - .:/app
+      - "80:80"
+    depends_on:
+      - container-manager
+      - mongodb
     environment:
-      - NODE_ENV=development
+      - CONTAINER_MANAGER_URL=http://container-manager:3000
+      - MONGODB_URI=mongodb://mongodb:27017/juicetokens
     networks:
-      - juicetokens-test
+      - juicetokens-network
+
+  # Container manager service - handles dynamic container provisioning
+  container-manager:
+    build:
+      context: ./docker/container-manager
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/juicetokens
+      - MAX_CONTAINERS=100
+      - CONTAINER_LIFETIME_HOURS=24
+      - DOCKER_NETWORK=juicetokens-network
+      - BASE_IMAGE=juicetokens/test-environment
+    depends_on:
+      - mongodb
+    networks:
+      - juicetokens-network
+
+  # MongoDB - shared database for all containers
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - juicetokens-network
+
+  # Base image for test containers - not started automatically
+  juicetokens-base:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: juicetokens/test-environment
+    environment:
+      - MOCK_MODE=true
+      - MONGODB_URI=mongodb://mongodb:27017/juicetokens
+    depends_on:
+      - mongodb
+    networks:
+      - juicetokens-network
+    profiles:
+      - build-only
+
+  # Static demo container - always available for quick testing
+  demo-container:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - USER_ID=demo
+      - MOCK_MODE=true
+      - MONGODB_URI=mongodb://mongodb:27017/juicetokens
+      - INITIALIZE_DATA=true
+      - INITIAL_TOKENS=100
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    networks:
+      - juicetokens-network
+
+volumes:
+  mongo-data:
 
 networks:
-  juicetokens-test:
+  juicetokens-network:
     driver: bridge 

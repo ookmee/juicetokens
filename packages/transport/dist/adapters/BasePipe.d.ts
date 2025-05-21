@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import { Pipe } from '../types/Pipe';
-import { PipeType, PipeConfiguration, PipeStatus, PipeCapabilities, MessageFrame } from '@juicetokens/proto';
+import { PipeType, PipeConfiguration, PipeStatus, PipeCapabilities, MessageFrame } from '../proto-types';
 /**
  * Base implementation of the Pipe interface with common functionality
  */

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const QrKissPipe_1 = require("../adapters/QrKissPipe");
 const PipeConfigManager_1 = require("../types/PipeConfigManager");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 describe('QrKissPipe', () => {
     // Mock document and window for testing
     global.document = {
@@ -31,7 +31,7 @@ describe('QrKissPipe', () => {
         const pipe = new QrKissPipe_1.QrKissPipe(pipeId, config);
         // Check initial state
         expect(pipe.id).toBe(pipeId);
-        expect(pipe.type).toBe(proto_1.PipeType.QR_KISS);
+        expect(pipe.type).toBe(proto_types_1.PipeType.QR_KISS);
         // Initialize the pipe
         await pipe.initialize(config);
         // Check if document methods were called

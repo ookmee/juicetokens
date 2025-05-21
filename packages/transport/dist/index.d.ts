@@ -1,5 +1,6 @@
 export * from './types/Pipe';
 export * from './types/PipeConfigManager';
+export * from './PipeFactory';
 export * from './adapters/BasePipe';
 export * from './adapters/QrKissPipe';
 export * from './adapters/BlePipe';
@@ -7,4 +8,4 @@ export * from './adapters/NfcPipe';
 export * from './adapters/WebPipe';
 export * from './framing/MessageFramer';
 export * from './reliability/ReliabilityManager';
-export * from './PipeFactory';
+export * from './networking';

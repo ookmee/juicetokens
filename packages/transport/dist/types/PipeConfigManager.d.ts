@@ -1,4 +1,4 @@
-import { PipeConfiguration, PipeType } from '@juicetokens/proto';
+import { PipeConfiguration, PipeType } from '../proto-types';
 /**
  * Options for QR KISS configuration
  */
@@ -51,26 +51,26 @@ export interface PipeConfigOptions {
 export declare class PipeConfigManager {
     /**
      * Create a pipe configuration for QR KISS
-     * @param options Configuration options
-     * @returns Pipe configuration
+     * @param options Options for pipe configuration
+     * @returns Pipe configuration for QR KISS
      */
     static createQrKissConfig(options?: PipeConfigOptions): PipeConfiguration;
     /**
      * Create a pipe configuration for BLE
-     * @param options Configuration options
-     * @returns Pipe configuration
+     * @param options Options for pipe configuration
+     * @returns Pipe configuration for BLE
      */
     static createBleConfig(options?: PipeConfigOptions): PipeConfiguration;
     /**
      * Create a pipe configuration for NFC
-     * @param options Configuration options
-     * @returns Pipe configuration
+     * @param options Options for pipe configuration
+     * @returns Pipe configuration for NFC
      */
     static createNfcConfig(options?: PipeConfigOptions): PipeConfiguration;
     /**
      * Create a pipe configuration for Web
-     * @param options Configuration options
-     * @returns Pipe configuration
+     * @param options Options for pipe configuration
+     * @returns Pipe configuration for Web
      */
     static createWebConfig(options?: PipeConfigOptions): PipeConfiguration;
     /**

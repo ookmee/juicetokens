@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrKissPipe = void 0;
 const BasePipe_1 = require("./BasePipe");
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("../proto-types");
 const MessageFramer_1 = require("../framing/MessageFramer");
 const ReliabilityManager_1 = require("../reliability/ReliabilityManager");
 /**
@@ -16,7 +16,7 @@ class QrKissPipe extends BasePipe_1.BasePipe {
      * @param config Pipe configuration
      */
     constructor(id, config) {
-        super(id, proto_1.PipeType.QR_KISS);
+        super(id, proto_types_1.PipeType.QR_KISS);
         this.frameQueue = [];
         this.isTransmitting = false;
         this.qrElement = null;
@@ -37,7 +37,7 @@ class QrKissPipe extends BasePipe_1.BasePipe {
         this.reliabilityManager = new ReliabilityManager_1.ReliabilityManager(async (message) => {
             const frames = this.messageFramer.createFrame(message.payload, message.type, message.headers);
             for (const frame of frames) {
-                const encoded = proto_1.MessageFrame.encode(frame).finish();
+                const encoded = proto_types_1.MessageFrame.encode(frame).finish();
                 await this.queueData(encoded);
             }
         }, {
@@ -47,7 +47,7 @@ class QrKissPipe extends BasePipe_1.BasePipe {
         });
         // Set capabilities based on QR limitations
         this._capabilities = {
-            pipeType: proto_1.PipeType.QR_KISS,
+            pipeType: proto_types_1.PipeType.QR_KISS,
             maxMessageSizeBytes: 4096, // Reasonable size for QR codes
             maxThroughputBytesPerSecond: 1024, // Relatively slow
             supportsBidirectional: true,

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PipeFactory = void 0;
-const proto_1 = require("@juicetokens/proto");
+const proto_types_1 = require("./proto-types");
 const QrKissPipe_1 = require("./adapters/QrKissPipe");
 const PipeConfigManager_1 = require("./types/PipeConfigManager");
 const uuid_1 = require("uuid");
@@ -22,13 +22,13 @@ class PipeFactory {
     static createPipe(type, config) {
         const pipeId = config?.pipeId ?? (0, uuid_1.v4)();
         switch (type) {
-            case proto_1.PipeType.QR_KISS:
+            case proto_types_1.PipeType.QR_KISS:
                 return new QrKissPipe_1.QrKissPipe(pipeId, config ?? PipeConfigManager_1.PipeConfigManager.createQrKissConfig({ pipeId }));
-            case proto_1.PipeType.BLE:
+            case proto_types_1.PipeType.BLE:
                 return new BlePipe_1.BlePipe(pipeId, config ?? PipeConfigManager_1.PipeConfigManager.createBleConfig({ pipeId }));
-            case proto_1.PipeType.NFC:
+            case proto_types_1.PipeType.NFC:
                 return new NfcPipe_1.NfcPipe(pipeId, config ?? PipeConfigManager_1.PipeConfigManager.createNfcConfig({ pipeId }));
-            case proto_1.PipeType.WEB:
+            case proto_types_1.PipeType.WEB:
                 return new WebPipe_1.WebPipe(pipeId, config ?? PipeConfigManager_1.PipeConfigManager.createWebConfig({ pipeId }));
             default:
                 throw new Error(`Unsupported pipe type: ${type}`);
@@ -40,10 +40,10 @@ class PipeFactory {
      */
     static createAllPipes() {
         return [
-            PipeFactory.createPipe(proto_1.PipeType.QR_KISS),
-            PipeFactory.createPipe(proto_1.PipeType.BLE),
-            PipeFactory.createPipe(proto_1.PipeType.NFC),
-            PipeFactory.createPipe(proto_1.PipeType.WEB)
+            PipeFactory.createPipe(proto_types_1.PipeType.QR_KISS),
+            PipeFactory.createPipe(proto_types_1.PipeType.BLE),
+            PipeFactory.createPipe(proto_types_1.PipeType.NFC),
+            PipeFactory.createPipe(proto_types_1.PipeType.WEB)
         ];
     }
     /**
@@ -52,10 +52,10 @@ class PipeFactory {
      */
     static getSupportedPipeTypes() {
         return [
-            proto_1.PipeType.QR_KISS,
-            proto_1.PipeType.BLE,
-            proto_1.PipeType.NFC,
-            proto_1.PipeType.WEB
+            proto_types_1.PipeType.QR_KISS,
+            proto_types_1.PipeType.BLE,
+            proto_types_1.PipeType.NFC,
+            proto_types_1.PipeType.WEB
         ];
     }
 }

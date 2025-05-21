@@ -14,20 +14,20 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// Type definitions
+// Export pipe types and factory
 __exportStar(require("./types/Pipe"), exports);
 __exportStar(require("./types/PipeConfigManager"), exports);
-// Base classes
+__exportStar(require("./PipeFactory"), exports);
+// Export adapters
 __exportStar(require("./adapters/BasePipe"), exports);
-// Pipe implementations
 __exportStar(require("./adapters/QrKissPipe"), exports);
 __exportStar(require("./adapters/BlePipe"), exports);
 __exportStar(require("./adapters/NfcPipe"), exports);
 __exportStar(require("./adapters/WebPipe"), exports);
-// Framing system
+// Export framing
 __exportStar(require("./framing/MessageFramer"), exports);
-// Reliability system
+// Export reliability
 __exportStar(require("./reliability/ReliabilityManager"), exports);
-// Factory
-__exportStar(require("./PipeFactory"), exports);
+// Export networking components
+__exportStar(require("./networking"), exports);
 //# sourceMappingURL=index.js.map
